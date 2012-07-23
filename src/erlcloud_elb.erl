@@ -13,6 +13,8 @@
          describe_load_balancer/1, describe_load_balancer/2,
          describe_load_balancers/1, describe_load_balancers/2,
 
+         describe_instance_health/1, describe_instance_health/2,
+
          configure_health_check/2, configure_health_check/3]).
 
 -include_lib("erlcloud/include/erlcloud.hrl").
@@ -131,7 +133,12 @@ describe_load_balancers(Names, Config) ->
                        [erlcloud_aws:param_list(Names, "LoadBalancerNames.member")]).
 
 
-
+describe_instance_health(LB) ->
+    describe_instance_health(LB, default_config()).
+describe_instance_health(LB, Config) ->
+    elb_request(Config,
+                       "DescribeInstanceHealth",
+                       [{"LoadBalancerName", LB}]).
 
 elb_request(Config, Action, Params) ->
     QParams = [{"Action", Action}, {"Version", ?API_VERSION} | Params],
