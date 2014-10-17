@@ -6,3 +6,4 @@ ebin/*.app
 deps
 .idea
 *.iml
+.eunit

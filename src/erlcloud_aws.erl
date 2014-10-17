@@ -1,6 +1,7 @@
 -module(erlcloud_aws).
 -export([aws_request/6, aws_request_xml/6,
-         param_list/2, default_config/0, format_timestamp/1]).
+         param_list/2, default_config/0, establish_config/1, establish_config/2,
+         format_timestamp/1]).
 
 -include_lib("erlcloud/include/erlcloud_aws.hrl").
 
@@ -80,33 +81,58 @@ format_timestamp({{Yr, Mo, Da}, {H, M, S}}) ->
         io_lib:format("~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ",
                       [Yr, Mo, Da, H, M, S])).
 
+
+
 default_config() ->
-    case {get(aws_config), os:getenv("AWS_ACCESS_KEY_ID"), os:getenv("AWS_SECRET_ACCESS_KEY")} of
+    establish_config([], false).
+
+
+establish_config(ConfigParams) ->
+    establish_config(ConfigParams, true).
+establish_config(ConfigParams, Cache) ->
+    case get(aws_config) of
         undefined ->
-            infer_config();
-        Config ->
-            Config
+            case {infer_config(ConfigParams), Cache} of
+                {Config = #aws_config{}, true} ->
+                    put(aws_config, Config),
+                    Config;
+                {Result, _} ->
+                    Result
+            end;
+        CachedConfig ->
+            CachedConfig
     end.
 
-infer_config() ->
-    case config_from_env() of
-        undefined ->
-            config_from_metadata();
-        AwsConfig = #aws_config{} ->
-            AwsConfig
-    end.
+infer_config(ConfigParams) ->
+    ConfigWithKeys = case config_keys_from_env() of
+                         error ->
+                             config_keys_from_metadata();
+                         AwsConfig = #aws_config{} ->
+                             AwsConfig
+                     end,
 
-config_from_env() ->
+    ConfigWithKeys#aws_config{
+        ec2_host = proplists:get_value(ec2_host, ConfigParams, ConfigWithKeys#aws_config.ec2_host),
+        s3_host = proplists:get_value(s3_host, ConfigParams, ConfigWithKeys#aws_config.s3_host),
+        s3_port = proplists:get_value(s3_port, ConfigParams, ConfigWithKeys#aws_config.s3_port),
+        sdb_host = proplists:get_value(sdb_host, ConfigParams, ConfigWithKeys#aws_config.sdb_host),
+        elb_host = proplists:get_value(elb_host, ConfigParams, ConfigWithKeys#aws_config.elb_host),
+        sqs_host = proplists:get_value(sqs_host, ConfigParams, ConfigWithKeys#aws_config.sqs_host),
+        mturk_host = proplists:get_value(mturk_host, ConfigParams,ConfigWithKeys#aws_config.mturk_host),
+        mon_host = proplists:get_value(mon_host, ConfigParams, ConfigWithKeys#aws_config.mon_host)
+    }.
+
+config_keys_from_env() ->
     case {os:getenv("AWS_ACCESS_KEY_ID"), os:getenv("AWS_SECRET_ACCESS_KEY")} of
         {false, _} ->
-            undefined;
+            error;
         {_, false} ->
-            undefined;
-        {AccessKeyId, SecretKey} ->
-            #aws_config{access_key_id=AccessKeyId, secret_access_key=SecretKey}
+            error;
+        {AccessKeyId, SecretAccessKey} ->
+            #aws_config{access_key_id=AccessKeyId, secret_access_key=SecretAccessKey}
     end.
 
-config_from_metadata() ->
+config_keys_from_metadata() ->
     {ok, InstanceProfile} = metadata_request("iam/security-credentials/"),
     {ok, SecurityCreds} = metadata_request("iam/security-credentials/" ++ InstanceProfile),
     {SecurityCredsParams} = jiffy:decode(SecurityCreds),
