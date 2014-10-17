@@ -8,7 +8,8 @@
     mturk_host="mechanicalturk.amazonaws.com"::string(),
     mon_host="monitoring.amazonaws.com"::string(),
     access_key_id::string(),
-    secret_access_key::string()
+    secret_access_key::string(),
+    security_token::string()
 }).
 -type(aws_config() :: #aws_config{}).
 

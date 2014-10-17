@@ -1,5 +1,5 @@
 -module(erlcloud_aws).
--export([aws_request/6, aws_request_xml/6,
+-export([aws_request/7, aws_request_xml/7,
          param_list/2, default_config/0, establish_config/1, establish_config/2,
          format_timestamp/1]).
 
@@ -10,17 +10,24 @@
 -define(METADATA_REQUEST_CONNECTION_TIMEOUT, 1000).
 
 
-aws_request_xml(Method, Host, Path, Params, AccessKeyID, SecretAccessKey) ->
-    Body = aws_request(Method, Host, Path, Params, AccessKeyID, SecretAccessKey),
+aws_request_xml(Method, Host, Path, Params, AccessKeyID, SecretAccessKey, SecurityToken) ->
+    Body = aws_request(Method, Host, Path, Params, AccessKeyID, SecretAccessKey, SecurityToken),
     %io:format("Body = ~p~n", [Body]),
     element(1, xmerl_scan:string(Body)).
 
-aws_request(Method, Host, Path, Params, AccessKeyID, SecretAccessKey) ->
+aws_request(Method, Host, Path, Params, AccessKeyID, SecretAccessKey, SecurityToken) ->
     Timestamp = format_timestamp(erlang:universaltime()),
     QParams = lists:sort([{"Timestamp", Timestamp},
                           {"SignatureVersion", "2"},
                           {"SignatureMethod", "HmacSHA1"},
-                          {"AWSAccessKeyId", AccessKeyID}|Params]),
+                          {"AWSAccessKeyId", AccessKeyID}]
+                          ++
+                          case SecurityToken of
+                              undefined -> [];
+                              _ -> [{"SecurityToken", SecurityToken}]
+                          end
+                          ++
+                          Params),
 
     QueryToSign = erlcloud_http:make_query_string(QParams),
     RequestToSign = [string:to_upper(atom_to_list(Method)), $\n,
@@ -138,15 +145,21 @@ config_keys_from_metadata() ->
     {SecurityCredsParams} = jiffy:decode(SecurityCreds),
     AccessKeyId = proplists:get_value(<<"AccessKeyId">>, SecurityCredsParams),
     SecretAccessKey = proplists:get_value(<<"SecretAccessKey">>, SecurityCredsParams),
-    case {AccessKeyId, SecretAccessKey} of
-        {undefined, _} ->
+    SecurityToken = binary_to_list(proplists:get_value(<<"Token">>, SecurityCredsParams)),
+    case {AccessKeyId, SecretAccessKey, SecurityToken} of
+        {undefined, _, _} ->
             error_logger:error_msg("Error fetching aws metadata configuration: ~p, access key id came back empty."),
             error;
-        {_, undefined} ->
+        {_, undefined, _} ->
+            error_logger:error_msg("Error fetching aws metadata configuration: ~p, secret access key came back empty."),
+            error;
+        {_, _, undefined} ->
             error_logger:error_msg("Error fetching aws metadata configuration: ~p, secret access key came back empty."),
             error;
         _ ->
-            #aws_config{access_key_id=AccessKeyId, secret_access_key=SecretAccessKey}
+            #aws_config{access_key_id=AccessKeyId,
+                        secret_access_key=SecretAccessKey,
+                        security_token=SecurityToken}
     end.
 
 metadata_request(RequestSuffix) ->
