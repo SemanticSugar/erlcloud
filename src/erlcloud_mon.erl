@@ -255,7 +255,8 @@ mon_query(Config, Action, Params, ApiVersion) ->
                                 "/",
                                 QParams,
                                 Config#aws_config.access_key_id,
-                                Config#aws_config.secret_access_key).
+                                Config#aws_config.secret_access_key,
+                                Config#aws_config.security_token).
 
 default_config() -> erlcloud_aws:default_config().
 

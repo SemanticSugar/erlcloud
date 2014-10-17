@@ -1435,6 +1435,8 @@ ec2_query(Config, Action, Params, ApiVersion) ->
     QParams = [{"Action", Action}, {"Version", ApiVersion}|Params],
     erlcloud_aws:aws_request_xml(post, Config#aws_config.ec2_host,
         "/", QParams, Config#aws_config.access_key_id,
-        Config#aws_config.secret_access_key).
+        Config#aws_config.secret_access_key,
+        Config#aws_config.security_token
+    ).
 
 default_config() -> erlcloud_aws:default_config().
