@@ -4,6 +4,11 @@
 
 -include_lib("erlcloud/include/erlcloud_aws.hrl").
 
+-define(METADATA_REQUEST_NUM_RETRIES, 2).
+-define(METADATA_REQUEST_TIMEOUT, 1000).
+-define(METADATA_REQUEST_CONNECTION_TIMEOUT, 1000).
+
+
 aws_request_xml(Method, Host, Path, Params, AccessKeyID, SecretAccessKey) ->
     Body = aws_request(Method, Host, Path, Params, AccessKeyID, SecretAccessKey),
     %io:format("Body = ~p~n", [Body]),
@@ -76,10 +81,67 @@ format_timestamp({{Yr, Mo, Da}, {H, M, S}}) ->
                       [Yr, Mo, Da, H, M, S])).
 
 default_config() ->
-    case get(aws_config) of
+    case {get(aws_config), os:getenv("AWS_ACCESS_KEY_ID"), os:getenv("AWS_SECRET_ACCESS_KEY")} of
         undefined ->
-            #aws_config{access_key_id=os:getenv("AWS_ACCESS_KEY_ID"),
-                        secret_access_key=os:getenv("AWS_SECRET_ACCESS_KEY")};
+            infer_config();
         Config ->
             Config
+    end.
+
+infer_config() ->
+    case config_from_env() of
+        undefined ->
+            config_from_metadata();
+        AwsConfig = #aws_config{} ->
+            AwsConfig
+    end.
+
+config_from_env() ->
+    case {os:getenv("AWS_ACCESS_KEY_ID"), os:getenv("AWS_SECRET_ACCESS_KEY")} of
+        {false, _} ->
+            undefined;
+        {_, false} ->
+            undefined;
+        {AccessKeyId, SecretKey} ->
+            #aws_config{access_key_id=AccessKeyId, secret_access_key=SecretKey}
+    end.
+
+config_from_metadata() ->
+    {ok, InstanceProfile} = metadata_request("iam/security-credentials/"),
+    {ok, SecurityCreds} = metadata_request("iam/security-credentials/" ++ InstanceProfile),
+    {SecurityCredsParams} = jiffy:decode(SecurityCreds),
+    AccessKeyId = proplists:get_value(<<"AccessKeyId">>, SecurityCredsParams),
+    SecretAccessKey = proplists:get_value(<<"SecretAccessKey">>, SecurityCredsParams),
+    case {AccessKeyId, SecretAccessKey} of
+        {undefined, _} ->
+            error_logger:error_msg("Error fetching aws metadata configuration: ~p, access key id came back empty."),
+            error;
+        {_, undefined} ->
+            error_logger:error_msg("Error fetching aws metadata configuration: ~p, secret access key came back empty."),
+            error;
+        _ ->
+            #aws_config{access_key_id=AccessKeyId, secret_access_key=SecretAccessKey}
+    end.
+
+metadata_request(RequestSuffix) ->
+    metadata_request(RequestSuffix, ?METADATA_REQUEST_NUM_RETRIES).
+
+metadata_request(_RequestSuffix, 0) ->
+    error;
+metadata_request(RequestSuffix, Tries) ->
+    case httpc:request(get,
+        {"http://169.254.169.254/latest/meta-data/" ++ RequestSuffix, []},
+        [{timeout, ?METADATA_REQUEST_TIMEOUT},
+            {connect_timeout, ?METADATA_REQUEST_CONNECTION_TIMEOUT}],
+        []) of
+        {ok, {200, Body}} ->
+            {ok, Body};
+        {ok, {StatusCode, _Body}} ->
+            error_logger:error_msg("Error fetching aws metadata configuration: ~p, status code: ~p",
+                [RequestSuffix, StatusCode]),
+            metadata_request(RequestSuffix, Tries-1);
+        {error, Reason} ->
+            error_logger:error_msg("Error fetching aws metadata configuration: ~p, reason: ~p",
+                [RequestSuffix, Reason]),
+            metadata_request(RequestSuffix, Tries-1)
     end.
