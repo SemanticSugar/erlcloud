@@ -160,9 +160,9 @@ metadata_request(RequestSuffix, Tries) ->
         [{timeout, ?METADATA_REQUEST_TIMEOUT},
             {connect_timeout, ?METADATA_REQUEST_CONNECTION_TIMEOUT}],
         []) of
-        {ok, {200, Body}} ->
+        {ok, {{_, 200, _}, _Headers, Body}} ->
             {ok, Body};
-        {ok, {StatusCode, _Body}} ->
+        {ok, {{_, StatusCode, _}, _Headers, _Body}} ->
             error_logger:error_msg("Error fetching aws metadata configuration: ~p, status code: ~p",
                 [RequestSuffix, StatusCode]),
             metadata_request(RequestSuffix, Tries-1);
