@@ -142,7 +142,7 @@ describe_instance_health(LB, Config) ->
 
 elb_request(Config, Action, Params) ->
     QParams = [{"Action", Action}, {"Version", ?API_VERSION} | Params],
-    erlcloud_aws:aws_request_xml(get, Config#aws_config.elb_host,
+    erlcloud_aws:aws_request_xml2(get, Config#aws_config.elb_host,
                                  "/", QParams, Config).
 
 elb_simple_request(Config, Action, Params) ->
