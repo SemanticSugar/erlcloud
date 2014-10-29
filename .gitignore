@@ -3,3 +3,11 @@
 _build
 ebin/*.beam
 ebin/*.app
+.eunit/
+rebar
+*.sublime-*
+deps/
+doc/
+.edts
+.idea
+*.iml
