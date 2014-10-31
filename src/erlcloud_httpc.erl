@@ -12,4 +12,6 @@
 -export([request/6]).
 
 request(URL, Method, Hdrs, Body, Timeout, _Config) ->
-    lhttpc:request(URL, Method, Hdrs, Body, Timeout, []).
+    httpc:request(Method, {URL, Hdrs, Body},
+        [{timeout, Timeout}, {connect_timeout, Timeout}],
+        []).
