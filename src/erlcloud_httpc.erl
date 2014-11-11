@@ -9,9 +9,14 @@
 
 -module(erlcloud_httpc).
 
--export([request/6]).
+-export([request/5, request/7]).
 
-request(URL, Method, Hdrs, Body, Timeout, _Config) ->
-    httpc:request(Method, {URL, Hdrs, Body},
+request(URL, Method, Hdrs, Timeout, _Config) ->
+    httpc:request(Method, {URL, Hdrs},
+        [{timeout, Timeout}, {connect_timeout, Timeout}],
+        []).
+
+request(URL, Method, Hdrs, ContentType, Body, Timeout, _Config) ->
+    httpc:request(Method, {URL, Hdrs, ContentType, Body},
         [{timeout, Timeout}, {connect_timeout, Timeout}],
         []).

@@ -1611,7 +1611,7 @@ mturk_request(Config, Operation, Params) ->
     Response = erlcloud_httpc:request(
                  lists:flatten(URL),
                  post,
-                 [{<<"content-type">>, <<"application/x-www-form-urlencoded">>}],
+                 [], <<"application/x-www-form-urlencoded">>,
                  list_to_binary(erlcloud_http:make_query_string(QParams)),
                  Config#aws_config.timeout, Config),
 

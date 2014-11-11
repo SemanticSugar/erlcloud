@@ -74,7 +74,9 @@ request_and_retry(Config, ResultFun, {retry, Request}) ->
       } = Request,
     Request2 = Request#aws_request{attempt = Attempt + 1},
     RetryFun = Config#aws_config.retry,
-    case erlcloud_httpc:request(URI, Method, Headers, Body, Config#aws_config.timeout, Config) of
+    case erlcloud_httpc:request(URI, Method, Headers,
+        proplists:get_value("content-type", Headers, ""), Body,
+        Config#aws_config.timeout, Config) of
         {ok, {{Status, StatusLine}, ResponseHeaders, ResponseBody}} ->
             Request3 = Request2#aws_request{
                          response_type = if Status >= 200, Status < 300 -> ok; true -> error end,

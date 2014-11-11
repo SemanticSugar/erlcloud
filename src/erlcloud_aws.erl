@@ -108,11 +108,11 @@ aws_request_form(Method, Protocol, Host, Port, Path, Form, Headers, Config) ->
             get ->
                 Req = lists:flatten([URL, $?, Form]),
                 erlcloud_httpc:request(
-                  Req, get, Headers, <<>>, Config#aws_config.timeout, Config);
+                  Req, get, Headers, Config#aws_config.timeout, Config);
             _ ->
                 erlcloud_httpc:request(
                   lists:flatten(URL), Method, 
-                  [{<<"content-type">>, <<"application/x-www-form-urlencoded; charset=utf-8">>} | Headers],
+                  Headers, <<"application/x-www-form-urlencoded; charset=utf-8">>,
                   list_to_binary(Form), Config#aws_config.timeout, Config)
         end,
     
@@ -202,7 +202,7 @@ get_credentials_from_metadata(Config) ->
     case http_body(
            erlcloud_httpc:request(
              "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
-             get, [], <<>>, Config#aws_config.timeout, Config)) of
+             get, [], Config#aws_config.timeout, Config)) of
         {error, Reason} ->
             {error, Reason};
         {ok, Body} ->
@@ -212,7 +212,7 @@ get_credentials_from_metadata(Config) ->
                    erlcloud_httpc:request(
                      "http://169.254.169.254/latest/meta-data/iam/security-credentials/" ++ 
                          binary_to_list(Role),
-                     get, [], <<>>, Config#aws_config.timeout, Config)) of
+                     get, [], Config#aws_config.timeout, Config)) of
                 {error, Reason} ->
                     {error, Reason};
                 {ok, Json} ->

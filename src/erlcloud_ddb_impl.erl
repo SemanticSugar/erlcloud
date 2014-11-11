@@ -187,7 +187,7 @@ request_and_retry(Config, Headers, Body, {attempt, Attempt}) ->
     RetryFun = retry_fun(Config),
     case erlcloud_httpc:request(
            url(Config), post,
-           [{<<"content-type">>, <<"application/x-amz-json-1.0">>} | Headers],
+           Headers, <<"application/x-amz-json-1.0">>,
            Body, timeout(Attempt, Config), Config) of
 
         {ok, {{200, _}, _, RespBody}} ->

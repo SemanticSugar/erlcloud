@@ -164,7 +164,7 @@ request_impl(Method, _Protocol, _Host, _Port, _Path, Operation, Params, Body, #a
     case erlcloud_aws:http_headers_body(
                 erlcloud_httpc:request(
                      url(Config), Method, 
-                     [{<<"content-type">>, <<"application/x-amz-json-1.1">>} | Headers],
+                     Headers, <<"application/x-amz-json-1.1">>,
                      Body, 1000, Config)) of
        {ok, {_RespHeader, RespBody}} ->
             case Config#aws_config.cloudtrail_raw_result of
