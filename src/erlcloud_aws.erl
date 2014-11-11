@@ -248,10 +248,10 @@ http_body(Return) ->
 -spec http_headers_body({ok, tuple()} | {error, term()}) 
                        -> {ok, {headers(), string() | binary()}} | {error, tuple()}.
 %% Extract the headers and body and do error handling on the return of a httpc:request call.
-http_headers_body({ok, {{OKStatus, _StatusLine}, Headers, Body}}) 
+http_headers_body({ok, {{_Version, OKStatus, _StatusLine}, Headers, Body}})
   when OKStatus >= 200, OKStatus =< 299 ->
     {ok, {Headers, Body}};
-http_headers_body({ok, {{Status, StatusLine}, _Headers, Body}}) ->
+http_headers_body({ok, {{_Version, Status, StatusLine}, _Headers, Body}}) ->
     {error, {http_error, Status, StatusLine, Body}};
 http_headers_body({error, Reason}) ->
     {error, {socket_error, Reason}}.
