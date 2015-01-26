@@ -4,7 +4,8 @@
 -module(erlcloud_sns).
 -author('elbrujohalcon@inaka.net').
 
--export([add_permission/3, add_permission/4,
+-export([set_sns_host/1,
+         add_permission/3, add_permission/4,
          create_platform_endpoint/2, create_platform_endpoint/3,
          create_platform_endpoint/4, create_platform_endpoint/5,
          create_platform_endpoint/6,
@@ -464,19 +465,22 @@ new_config(AccessKeyID, SecretAccessKey) ->
        secret_access_key=SecretAccessKey
       }.
 
+set_sns_host(Host) ->
+    Config = erlcloud_aws:default_config(),
+    put(aws_config, Config#aws_config{sns_host = Host}).
+
 sns_simple_request(Config, Action, Params) ->
     sns_request(Config, Action, Params),
     ok.
 
 sns_xml_request(Config, Action, Params) ->
+    QParams =[{"Action", Action}, {"Version", ?API_VERSION} | Params],
     case erlcloud_aws:aws_request_xml2(
-           post, scheme_to_protocol(Config#aws_config.sns_scheme),
-           Config#aws_config.sns_host, undefined, "/",
-           [{"Action", Action}, {"Version", ?API_VERSION} | Params],
-           Config) of
+           get, scheme_to_protocol(Config#aws_config.sns_scheme),
+           Config#aws_config.sns_host, undefined, "/", QParams, Config) of
         {ok, XML} -> XML;
         {error, {http_error, 400, _BadRequest, Body}} ->
-            XML = element(1, xmerl_scan:string(binary_to_list(Body))),
+            XML = element(1, xmerl_scan:string(Body)),
             ErrCode = erlcloud_xml:get_text("Error/Code", XML),
             ErrMsg = erlcloud_xml:get_text("Error/Message", XML),
             erlang:error({sns_error, ErrCode, ErrMsg});
