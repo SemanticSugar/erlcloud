@@ -27,7 +27,8 @@
          confirm_subscription/1, confirm_subscription/2, confirm_subscription/3,
          confirm_subscription2/2, confirm_subscription2/3, confirm_subscription2/4,
          set_topic_attributes/3, set_topic_attributes/4,
-         subscribe/3, subscribe/4
+         subscribe/3, subscribe/4,
+         unsubscribe/1, unsubscribe/2
          ]).
 -export([parse_event/1, get_event_type/1, parse_event_message/1,
          get_notification_attribute/2]).
@@ -403,6 +404,16 @@ subscribe(Endpoint, Protocol, TopicArn, Config)
                 {"Protocol", atom_to_list(Protocol)},
                 {"TopicArn", TopicArn}]),
         erlcloud_xml:get_text("/SubscribeResponse/SubscribeResult/SubscriptionArn", Doc).
+
+-spec(unsubscribe/1 :: (string()) -> Arn::string()).
+-spec(unsubscribe/2 :: (string(), aws_config()) -> Arn::string()).
+
+unsubscribe(SubscriptionArn) ->
+    unsubscribe(SubscriptionArn, default_config()).
+
+unsubscribe(SubscriptionArn, Config) when is_record(Config, aws_config) ->
+    Doc = sns_xml_request(Config, "Unsubscribe", [{"SubscriptionArn", SubscriptionArn}]),
+    erlcloud_xml:get_text("/UnsubscribeResponse/ResponseMetadata/RequestId", Doc).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
