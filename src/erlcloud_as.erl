@@ -6,11 +6,13 @@
 %% AWS Autoscaling functions
 -export([describe_groups/0, describe_groups/1, describe_groups/2, describe_groups/4,
          set_desired_capacity/2, set_desired_capacity/3, set_desired_capacity/4,
-
-         describe_launch_configs/0, describe_launch_configs/1, describe_launch_configs/2, 
+         set_as_host/1,
+         record_lifecycle_action_heartbeat/3, record_lifecycle_action_heartbeat/4,
+         complete_lifecycle_action/4, complete_lifecycle_action/5,
+         describe_launch_configs/0, describe_launch_configs/1, describe_launch_configs/2,
          describe_launch_configs/4,
 
-         describe_instances/0, describe_instances/1, describe_instances/2, 
+         describe_instances/0, describe_instances/1, describe_instances/2,
          describe_instances/4,
          terminate_instance/1, terminate_instance/2, terminate_instance/3]).
 
@@ -18,15 +20,15 @@
 -define(DEFAULT_MAX_RECORDS, 20).
 
 % xpath for group descriptions used in describe_groups functions:
--define(DESCRIBE_GROUPS_PATH, 
+-define(DESCRIBE_GROUPS_PATH,
         "/DescribeAutoScalingGroupsResponse/DescribeAutoScalingGroupsResult/AutoScalingGroups/member").
--define(DESCRIBE_GROUPS_NEXT_TOKEN, 
+-define(DESCRIBE_GROUPS_NEXT_TOKEN,
         "/DescribeAutoScalingGroupsResponse/DescribeAutoScalingGroupsResult/NextToken").
 % xpath for the request ID returned from a SetDesiredCapacity operation:
 -define(SET_SCALE_REQUEST_ID_PATH, "/SetDesiredCapacityResponse/ResponseMetadata/RequestId").
 
 %% xpath for launch config functions:
--define(DESCRIBE_LAUNCH_CONFIG_PATH, 
+-define(DESCRIBE_LAUNCH_CONFIG_PATH,
         "/DescribeLaunchConfigurationsResponse/DescribeLaunchConfigurationsResult/LaunchConfigurations/member").
 -define(LAUNCH_CONFIG_NEXT_TOKEN,
         "/DescribeLaunchConfigurationsResponse/DescribeLaunchConfigurationsResult/NextToken").
@@ -38,8 +40,24 @@
         "/DescribeAutoScalingInstancesResponse/DescribeAutoScalingInstancesResult/NextToken").
 
 %% xpath for terminate instance:
--define(TERMINATE_INSTANCE_ACTIVITY, 
+-define(TERMINATE_INSTANCE_ACTIVITY,
         "/TerminateInstanceInAutoScalingGroupResponse/TerminateInstanceInAutoScalingGroupResult/Activity").
+
+-define(COMPLETE_LIFECYCLE_ACTION_RESPONSE,
+    "/CompleteLifecycleActionResponse/ResponseMetadata/RequestId").
+
+-define(RECORD_LIFECYCLE_ACTION_HEARTBEAT_RESPONSE,
+    "/RecordLifecycleActionHeartbeatResponse/ResponseMetadata/RequestId").
+
+
+
+%% --------------------------------------------------------------------
+%% @doc Sets as hosts in #aws_config{}
+%% @end
+%% --------------------------------------------------------------------
+set_as_host(Host) ->
+    Config = erlcloud_aws:default_config(),
+    put(aws_config, Config#aws_config{as_host = Host}).
 
 %% --------------------------------------------------------------------
 %% @doc Calls describe_groups([], default_configuration())
@@ -49,7 +67,7 @@ describe_groups() ->
     describe_groups([], erlcloud_aws:default_config()).
 
 %% --------------------------------------------------------------------
-%% @doc describe_groups with a specific configuration OR with a 
+%% @doc describe_groups with a specific configuration OR with a
 %% specific list of members.
 %% @end
 %% --------------------------------------------------------------------
@@ -62,13 +80,13 @@ describe_groups(GroupNames) ->
 %% @doc Get descriptions of the given autoscaling groups.
 %%      The account calling this function needs permission for the
 %%      autoscaling:DescribeAutoScalingGroups action.
-%% 
+%%
 %% Returns {{paged, NextPageId}, Results} if there are more than
 %% the current maximum count of results, {ok, Results} if everything
 %% fits and {error, Reason} if there was a problem.
 %% @end
 %% --------------------------------------------------------------------
--spec describe_groups(list(string()), aws_config()) -> 
+-spec describe_groups(list(string()), aws_config()) ->
                              {ok, term()} | {{paged, string()}, term()} | {error, term()}.
 describe_groups(GN, Config) ->
     describe_groups(GN, ?DEFAULT_MAX_RECORDS, none, Config).
@@ -78,27 +96,27 @@ describe_groups(GN, Config) ->
 %%      maximum number of results and optional paging offset.
 %% @end
 %% --------------------------------------------------------------------
--spec describe_groups(list(string()), integer(), string() | none, aws_config()) -> 
+-spec describe_groups(list(string()), integer(), string() | none, aws_config()) ->
                              {ok, term()} | {{paged, string()}, term()} | {error, term()}.
 describe_groups(GN, MaxRecords, none, Config) ->
     describe_groups(GN, [{"MaxRecords", MaxRecords}], Config);
 describe_groups(GN, MaxRecords, NextToken, Config) ->
     describe_groups(GN, [{"NextToken", NextToken}, {"MaxRecords", MaxRecords}], Config).
 
--spec describe_groups(list(string()), list({string(), term()}), aws_config()) -> 
+-spec describe_groups(list(string()), list({string(), term()}), aws_config()) ->
                              {ok, term()} | {{paged, string()}, term()} | {error, term()}.
 describe_groups(GN, Params, Config) ->
     P = member_params("AutoScalingGroupNames.member.", GN) ++ Params,
     case as_query(Config, "DescribeAutoScalingGroups", P, ?API_VERSION) of
         {ok, Doc} ->
-            Groups = xmerl_xpath:string(?DESCRIBE_GROUPS_PATH, Doc),            
+            Groups = xmerl_xpath:string(?DESCRIBE_GROUPS_PATH, Doc),
             {next_token(?DESCRIBE_GROUPS_NEXT_TOKEN, Doc), [extract_group(G) || G <- Groups]};
         {error, Reason} ->
             {error, Reason}
     end.
-    
 
-%% retrieve NextToken from the XML at Path location.  Path is expected to lead to a 
+
+%% retrieve NextToken from the XML at Path location.  Path is expected to lead to a
 %% single occurrence and if it does not exist as such, this just returns ok.
 -spec next_token(string(), term()) -> ok | {paged, string()}.
 next_token(Path, XML) ->
@@ -290,18 +308,77 @@ priv_terminate_instance(Params, Config) ->
         {error, Reason} ->
             {error, Reason}
     end.
-    
 
 
-%% given a list of member identifiers, return a list of 
+%% --------------------------------------------------------------------
+%% @doc Completes the lifecycle action for the associated token
+%% initiated under the given lifecycle hook with the specified result.
+%% This operation is a part of the basic sequence for adding a lifecycle
+%% hook to an Auto Scaling group
+%% @end
+%% --------------------------------------------------------------------
+-spec complete_lifecycle_action(string(), string(), string(), atom()) ->
+    {ok, string()} | {error, term()}.
+complete_lifecycle_action(GroupName, HookName, ActionToken, LifecycleActionResult) ->
+    Config = erlcloud_aws:default_config(),
+    complete_lifecycle_action(GroupName, HookName, ActionToken, LifecycleActionResult, Config).
+
+-spec complete_lifecycle_action(string(), string(), string(), atom(), aws_config()) ->
+    {ok, string()} | {error, term()}.
+complete_lifecycle_action(GroupName, HookName, ActionToken, LifecycleActionResult, Config) ->
+    LifecycleActionResultIn = case LifecycleActionResult of
+                                  continue -> "CONTINUE";
+                                  abandom -> "ABANDON"
+                              end,
+    Params = [{"AutoScalingGroupName", GroupName},
+        {"LifecycleActionToken", ActionToken},
+        {"LifecycleActionResult", LifecycleActionResultIn},
+        {"LifecycleHookName", HookName}],
+    case as_query(Config, "CompleteLifecycleAction", Params, ?API_VERSION) of
+        {ok, Doc} ->
+            [RequestId] = xmerl_xpath:string(?COMPLETE_LIFECYCLE_ACTION_RESPONSE, Doc),
+            {ok, erlcloud_xml:get_text(RequestId)};
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+
+%% --------------------------------------------------------------------
+%% @doc Records a heartbeat for the lifecycle action associated with a
+%% specific token. This extends the timeout by the length of time
+%% defined by the HeartbeatTimeout parameter of PutLifecycleHook.
+%% @end
+%% --------------------------------------------------------------------
+-spec record_lifecycle_action_heartbeat(string(), string(), string()) ->
+    {ok, string()} | {error, term()}.
+record_lifecycle_action_heartbeat(GroupName, HookName, ActionToken) ->
+    Config = erlcloud_aws:default_config(),
+    record_lifecycle_action_heartbeat(GroupName, HookName, ActionToken, Config).
+
+-spec record_lifecycle_action_heartbeat(string(), string(), string(), aws_config()) ->
+    {ok, string()} | {error, term()}.
+record_lifecycle_action_heartbeat(GroupName, HookName, ActionToken, Config) ->
+    Params = [{"AutoScalingGroupName", GroupName},
+        {"LifecycleActionToken", ActionToken},
+        {"LifecycleHookName", HookName}],
+    case as_query(Config, "RecordLifecycleActionHeartbeat", Params, ?API_VERSION) of
+        {ok, Doc} ->
+            [RequestId] = xmerl_xpath:string(?RECORD_LIFECYCLE_ACTION_HEARTBEAT_RESPONSE, Doc),
+            {ok, erlcloud_xml:get_text(RequestId)};
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+
+%% given a list of member identifiers, return a list of
 %% {key with prefix, member identifier} for use in autoscaling calls.
-%% Example pair that could be returned in a list is 
+%% Example pair that could be returned in a list is
 %% {"LaunchConfigurationNames.member.1", "my-launch-config}.
 -spec member_params(string(), list(string())) -> list({string(), string()}).
 member_params(Prefix, MemberIdentifiers) ->
     MemberKeys = [Prefix ++ integer_to_list(I) || I <- lists:seq(1, length(MemberIdentifiers))],
     [{K, V} || {K, V} <- lists:zip(MemberKeys, MemberIdentifiers)].
-    
+
 
 extract_config(C) ->
     #aws_launch_config{
@@ -333,5 +410,5 @@ get_text(Label, Doc) ->
 -spec as_query(aws_config(), string(), list({string(), string()}), string()) -> {ok, term()} | {error, term}.
 as_query(Config, Action, Params, ApiVersion) ->
     QParams = [{"Action", Action}, {"Version", ApiVersion}|Params],
-    erlcloud_aws:aws_request_xml2(post, Config#aws_config.as_host, 
+    erlcloud_aws:aws_request_xml2(get, Config#aws_config.as_host,
                                   "/", QParams, Config).

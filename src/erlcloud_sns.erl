@@ -4,7 +4,8 @@
 -module(erlcloud_sns).
 -author('elbrujohalcon@inaka.net').
 
--export([add_permission/3, add_permission/4,
+-export([set_sns_host/1,
+         add_permission/3, add_permission/4,
          create_platform_endpoint/2, create_platform_endpoint/3,
          create_platform_endpoint/4, create_platform_endpoint/5,
          create_platform_endpoint/6,
@@ -26,7 +27,8 @@
          confirm_subscription/1, confirm_subscription/2, confirm_subscription/3,
          confirm_subscription2/2, confirm_subscription2/3, confirm_subscription2/4,
          set_topic_attributes/3, set_topic_attributes/4,
-         subscribe/3, subscribe/4
+         subscribe/3, subscribe/4,
+         unsubscribe/1, unsubscribe/2
          ]).
 -export([parse_event/1, get_event_type/1, parse_event_message/1,
          get_notification_attribute/2]).
@@ -403,6 +405,16 @@ subscribe(Endpoint, Protocol, TopicArn, Config)
                 {"TopicArn", TopicArn}]),
         erlcloud_xml:get_text("/SubscribeResponse/SubscribeResult/SubscriptionArn", Doc).
 
+-spec(unsubscribe/1 :: (string()) -> Arn::string()).
+-spec(unsubscribe/2 :: (string(), aws_config()) -> Arn::string()).
+
+unsubscribe(SubscriptionArn) ->
+    unsubscribe(SubscriptionArn, default_config()).
+
+unsubscribe(SubscriptionArn, Config) when is_record(Config, aws_config) ->
+    Doc = sns_xml_request(Config, "Unsubscribe", [{"SubscriptionArn", SubscriptionArn}]),
+    erlcloud_xml:get_text("/UnsubscribeResponse/ResponseMetadata/RequestId", Doc).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PRIVATE
@@ -464,19 +476,22 @@ new_config(AccessKeyID, SecretAccessKey) ->
        secret_access_key=SecretAccessKey
       }.
 
+set_sns_host(Host) ->
+    Config = erlcloud_aws:default_config(),
+    put(aws_config, Config#aws_config{sns_host = Host}).
+
 sns_simple_request(Config, Action, Params) ->
     sns_request(Config, Action, Params),
     ok.
 
 sns_xml_request(Config, Action, Params) ->
+    QParams =[{"Action", Action}, {"Version", ?API_VERSION} | Params],
     case erlcloud_aws:aws_request_xml2(
-           post, scheme_to_protocol(Config#aws_config.sns_scheme),
-           Config#aws_config.sns_host, undefined, "/",
-           [{"Action", Action}, {"Version", ?API_VERSION} | Params],
-           Config) of
+           get, scheme_to_protocol(Config#aws_config.sns_scheme),
+           Config#aws_config.sns_host, undefined, "/", QParams, Config) of
         {ok, XML} -> XML;
         {error, {http_error, 400, _BadRequest, Body}} ->
-            XML = element(1, xmerl_scan:string(binary_to_list(Body))),
+            XML = element(1, xmerl_scan:string(Body)),
             ErrCode = erlcloud_xml:get_text("Error/Code", XML),
             ErrMsg = erlcloud_xml:get_text("Error/Message", XML),
             erlang:error({sns_error, ErrCode, ErrMsg});
