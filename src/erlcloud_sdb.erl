@@ -205,8 +205,8 @@ list_domains(FirstToken, MaxDomains, Config)
   when is_list(FirstToken),
        is_integer(MaxDomains) orelse MaxDomains =:= none ->
 
-    Params = 
-    maybe_add_nexttoken(FirstToken, 
+    Params =
+    maybe_add_nexttoken(FirstToken,
     maybe_add_maxdomains(MaxDomains, [])),
 
     {Doc, Result} = sdb_request(Config, "ListDomains", Params),

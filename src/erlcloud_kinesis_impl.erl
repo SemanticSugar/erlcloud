@@ -112,7 +112,6 @@ request_and_retry(Config, Headers, Body, ShouldDecode, {attempt, Attempt}) ->
            url(Config), post,
            [{<<"content-type">>, <<"application/x-amz-json-1.1">>} | Headers],
            Body, erlcloud_aws:get_timeout(Config), Config) of
-
         {ok, {{200, _}, _, RespBody}} ->
             Result = case ShouldDecode of
                          true  -> decode(RespBody);

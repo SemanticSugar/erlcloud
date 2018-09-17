@@ -187,7 +187,7 @@ request_impl(Method, Scheme, Host, Port, Path, Operation, Params, Body, #aws_con
     %% TODO: Make api prefix a part of aws_config
     Api_Operation = lists:flatten(?CLOUD_TRAIL_API_PREFIX, Operation),
     Headers = headers(Config, Api_Operation, Params, Body, ?SERVICE_NAME),
-    
+   
     case erlcloud_aws:aws_request_form_raw(
         Method, Scheme, Host, Port, Path, Body, 
         [{"content-type", "application/x-amz-json-1.1"} | Headers], 

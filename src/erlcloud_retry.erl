@@ -70,6 +70,7 @@ request_and_retry(Config, ResultFun, {retry, Request}, MaxAttempts) ->
         erlcloud_aws:get_timeout(Config), Config),
     case Rsp of
         {ok, {{Status, StatusLine}, ResponseHeaders, ResponseBody}} ->
+
             Request3 = Request2#aws_request{
                  response_type = if Status >= 200, Status < 300 -> ok; true -> error end,
                  error_type = aws,

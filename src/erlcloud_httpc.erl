@@ -117,4 +117,3 @@ to_binary(Val) when erlang:is_list(Val) ->
   erlang:list_to_binary(Val);
 to_binary(Val) when erlang:is_binary(Val) ->
   Val.
-

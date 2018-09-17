@@ -15,6 +15,7 @@
          update_config/1,clear_config/1, clear_expired_configs/0,
          service_config/3, service_host/2,
          configure/1, format_timestamp/1,
+         region/1,
          http_headers_body/1,
          http_body/1,
          request_to_return/1,
@@ -51,8 +52,8 @@
 -type httpc_result() :: {ok, httpc_result_ok()} | {error, httpc_result_error()}.
 -export_type([httpc_result/0]).
 
--record(metadata_credentials, {
-         access_key_id :: string(),
+-record(metadata_credentials,
+        {access_key_id :: string(),
          secret_access_key :: string(),
          security_token=undefined :: string(),
          expiration_gregorian_seconds :: integer()
@@ -73,23 +74,23 @@
 
 aws_request_xml(Method, Host, Path, Params, #aws_config{} = Config) ->
     Body = aws_request(Method, Host, Path, Params, Config),
-    element(1, xmerl_scan:string(binary_to_list(Body))).
+    element(1, xmerl_scan:string(Body)).
 aws_request_xml(Method, Host, Path, Params, AccessKeyID, SecretAccessKey) ->
     Body = aws_request(Method, Host, Path, Params, AccessKeyID, SecretAccessKey),
-    element(1, xmerl_scan:string(binary_to_list(Body))).
+    element(1, xmerl_scan:string(Body)).
 aws_request_xml(Method, Protocol, Host, Port, Path, Params, #aws_config{} = Config) ->
     Body = aws_request(Method, Protocol, Host, Port, Path, Params, Config),
-    element(1, xmerl_scan:string(binary_to_list(Body))).
+    element(1, xmerl_scan:string(Body)).
 aws_request_xml(Method, Protocol, Host, Port, Path, Params, AccessKeyID, SecretAccessKey) ->
     Body = aws_request(Method, Protocol, Host, Port, Path, Params, AccessKeyID, SecretAccessKey),
-    element(1, xmerl_scan:string(binary_to_list(Body))).
+    element(1, xmerl_scan:string(Body)).
 
 aws_request_xml2(Method, Host, Path, Params, #aws_config{} = Config) ->
     aws_request_xml2(Method, undefined, Host, undefined, Path, Params, Config).
 aws_request_xml2(Method, Protocol, Host, Port, Path, Params, #aws_config{} = Config) ->
     case aws_request2(Method, Protocol, Host, Port, Path, Params, Config) of
         {ok, Body} ->
-            {ok, element(1, xmerl_scan:string(binary_to_list(Body)))};
+            {ok, element(1, xmerl_scan:string(Body))};
         {error, Reason} ->
             {error, Reason}
     end.
@@ -146,7 +147,6 @@ aws_request2_no_update(Method, Protocol, Host, Port, Path, Params, #aws_config{}
     Signature = base64:encode(erlcloud_util:sha_mac(Config#aws_config.secret_access_key, RequestToSign)),
 
     Query = [QueryToSign, "&Signature=", erlcloud_http:url_encode(Signature)],
-
     aws_request_form(Method, Protocol, Host, Port, Path, Query, Headers, Config).
 
 aws_region_from_host(Host) ->
@@ -816,6 +816,19 @@ timestamp_to_gregorian_seconds(Timestamp) ->
     {ok, [Yr, Mo, Da, H, M, S], []} = io_lib:fread("~d-~d-~dT~d:~d:~dZ", binary_to_list(Timestamp)),
     calendar:datetime_to_gregorian_seconds({{Yr, Mo, Da}, {H, M, S}}).
 
+-spec region(aws_config()) -> {ok, string()} | {error, term()}.
+region(Config) ->
+    case http_body(
+           erlcloud_httpc:request(
+             "http://169.254.169.254/latest/dynamic/instance-identity/document",
+             get, [], Config#aws_config.timeout, Config)) of
+        {error, Reason} ->
+            {error, Reason};
+        {ok, Json} ->
+            Doc = jsx:decode(list_to_binary(Json)),
+            {ok, binary_to_list(proplists:get_value(<<"region">>, Doc))}
+    end.
+
 -spec get_credentials_from_metadata(aws_config())
                                    -> {ok, #metadata_credentials{}} | {error, metadata_not_available | httpc_result_error()}.
 get_credentials_from_metadata(Config) ->
@@ -937,7 +950,7 @@ http_body(Return) ->
 http_headers_body({ok, {{OKStatus, _StatusLine}, Headers, Body}})
   when OKStatus >= 200, OKStatus =< 299 ->
     {ok, {Headers, Body}};
-http_headers_body({ok, {{Status, StatusLine}, _Headers, Body}}) ->
+http_headers_body({ok, {{_Version, Status, StatusLine}, _Headers, Body}}) ->
     {error, {http_error, Status, StatusLine, Body}};
 http_headers_body({error, Reason}) ->
     {error, {socket_error, Reason}}.
