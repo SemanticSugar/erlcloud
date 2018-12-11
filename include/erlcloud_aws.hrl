@@ -45,23 +45,23 @@
 -record(aws_request,
         {
           %% Provided by requesting service
-          service :: s3,
-          uri :: string() | binary(),
-          method :: atom(),
-          request_headers :: [{string(), string()}],
-          request_body :: binary(),
+          service :: s3 | undefined,
+          uri :: string() | binary() | undefined,
+          method :: atom() | undefined,
+          request_headers :: [{string(), string()}] | undefined,
+          request_body :: binary() | undefined,
 
           %% Read from response
           attempt = 0 :: integer(),
-          response_type :: ok | error,
-          error_type :: aws | httpc,
-          httpc_error_reason :: term(),
-          response_status :: pos_integer(),
-          response_status_line :: string(),
-          response_headers :: [{string(), string()}],
-          response_body :: binary(),
-          
+          response_type :: ok | error | undefined,
+          error_type :: aws | httpc | undefined,
+          httpc_error_reason :: term() | undefined,
+          response_status :: pos_integer() | undefined,
+          response_status_line :: string() | undefined,
+          response_headers :: [{string(), string()}] | undefined,
+          response_body :: binary() | undefined,
+
           %% Service specific error information
-          should_retry :: boolean()
+          should_retry :: boolean() | undefined
         }).
 
