@@ -13,7 +13,7 @@ assume_role(AwsConfig, RoleArn, RoleSessionName, DurationSeconds) ->
 
 
 % See http://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html
--spec assume_role/5 :: (#aws_config{}, string(), string(), 900..3600, undefined | string()) -> {#aws_config{}, proplist()}.
+-spec assume_role(#aws_config{}, string(), string(), 900..3600, undefined | string()) -> {#aws_config{}, proplist()}.
 assume_role(AwsConfig, RoleArn, RoleSessionName, DurationSeconds, ExternalId)
     when length(RoleArn) >= 20,
          length(RoleSessionName) >= 2, length(RoleSessionName) =< 32,
