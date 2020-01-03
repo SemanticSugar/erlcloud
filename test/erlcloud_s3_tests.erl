@@ -69,7 +69,7 @@ httpc_expect(Method, Response) ->
 
 get_bucket_lifecycle_tests(_) ->
     Response = {ok, {{200, "OK"}, [], <<"
-<LifecycleConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">
+<LifecycleConfiguration xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">
     <Rule>
         <ID>Archive and then delete rule</ID>
         <Prefix>projectdocs/</Prefix>
@@ -174,21 +174,21 @@ set_bucket_notification_test_() ->
 get_bucket_notification_test(_) ->
     Response = {ok, {{200, "OK"}, [], ?S3_BUCKET_EVENT_XML_CONFIG}},
     meck:expect(erlcloud_httpc, request,
-        fun("https://s3.amazonaws.com/?notification", _, _, _, _, _) -> Response end),
+        fun("https://?notification.s3.amazonaws.com", _, _, _, _, _) -> Response end),
     ?_assertEqual(?S3_BUCKET_EVENTS_LIST,
         erlcloud_s3:get_bucket_attribute("BucketName", notification, config())).
 
 get_bucket_notification_no_prefix_test(_) ->
     Response = {ok, {{200, "OK"}, [], ?S3_BUCKET_EVENT_XML_CONFIG_NO_PREFIX}},
     meck:expect(erlcloud_httpc, request,
-        fun("https://s3.amazonaws.com/?notification", _, _, _, _, _) -> Response end),
+        fun("https://?notification.s3.amazonaws.com", _, _, _, _, _) -> Response end),
     ?_assertEqual(?S3_BUCKET_EVENTS_LIST_NO_PREFIX,
         erlcloud_s3:get_bucket_attribute("BucketName", notification, config())).
 
 get_bucket_notification_no_suffix_test(_) ->
     Response = {ok, {{200, "OK"}, [], ?S3_BUCKET_EVENT_XML_CONFIG_NO_SUFFIX}},
     meck:expect(erlcloud_httpc, request,
-        fun("https://s3.amazonaws.com/?notification", _, _, _, _, _) -> Response end),
+        fun("https://?notification.s3.amazonaws.com", _, _, _, _, _) -> Response end),
     ?_assertEqual(?S3_BUCKET_EVENTS_LIST_NO_SUFFIX,
                   erlcloud_s3:get_bucket_attribute("BucketName", notification, config())).
 
@@ -380,7 +380,7 @@ error_handling_tests(_) ->
 %% Bucket Inventory tests
 list_inventory_configurations_test(_)->
     Response = {ok, {{200, "OK"}, [], <<"
-        <ListInventoryConfigurationsResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">
+        <ListInventoryConfigurationsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">
             <InventoryConfiguration>
                <Id>report1</Id>
                <IsEnabled>true</IsEnabled>
@@ -551,7 +551,7 @@ list_inventory_configurations_test(_)->
 
 get_inventory_configuration_test(_) ->
     Response = {ok, {{200, "OK"}, [], <<"
-        <InventoryConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">
+        <InventoryConfiguration xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">
            <Id>report1</Id>
            <IsEnabled>true</IsEnabled>
            <Filter>
@@ -612,7 +612,7 @@ get_inventory_configuration_test(_) ->
 encode_inventory_test(_)->
     ExpectedXml =
         "<?xml version=\"1.0\"?>"
-            "<InventoryConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+            "<InventoryConfiguration xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">"
                 "<Id>report1</Id>"
                 "<IsEnabled>true</IsEnabled>"
                "<Filter>"
@@ -732,26 +732,26 @@ delete_bucket_inventory_test(_) ->
     ?_assertEqual(ok, Result).
 
 delete_objects_batch_single_tests(_) ->
-    Response = {ok, {{200, "OK"}, [], <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Deleted><Key>sample1.txt</Key></Deleted></DeleteResult>">>}},
+    Response = {ok, {{200, "OK"}, [], <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\"><Deleted><Key>sample1.txt</Key></Deleted></DeleteResult>">>}},
     meck:expect(erlcloud_httpc, request, httpc_expect(post, Response)),
     Result = erlcloud_s3:delete_objects_batch("BucketName",["sample1.txt"], config()),
     ?_assertEqual([{deleted,["sample1.txt"]},{error,[]}], Result).
 
 delete_objects_batch_tests(_) ->
     Response = {ok, {{200, "OK"}, [], <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<DeleteResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Deleted><Key>sample1.txt</Key></Deleted><Deleted><Key>sample2.txt</Key></Deleted><Deleted><Key>sample3.txt</Key></Deleted></DeleteResult>">>}},
+<DeleteResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\"><Deleted><Key>sample1.txt</Key></Deleted><Deleted><Key>sample2.txt</Key></Deleted><Deleted><Key>sample3.txt</Key></Deleted></DeleteResult>">>}},
     meck:expect(erlcloud_httpc, request, httpc_expect(post, Response)),
     Result = erlcloud_s3:delete_objects_batch("BucketName",["sample1.txt","sample2.txt","sample3.txt"], config()),
     ?_assertEqual([{deleted,["sample1.txt", "sample2.txt","sample3.txt"]},{error,[]}], Result).
 
 delete_objects_batch_with_err_tests(_) ->
-    Response = {ok, {{200, "OK"}, [], <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Error><Key>sample2.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>">>}},
+    Response = {ok, {{200, "OK"}, [], <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\"><Error><Key>sample2.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>">>}},
     meck:expect(erlcloud_httpc, request, httpc_expect(post, Response)),
     Result = erlcloud_s3:delete_objects_batch("BucketName",["sample2.txt"], config()),
     ?_assertEqual([{deleted,[]}, {error,[{"sample2.txt","AccessDenied","Access Denied"}]}], Result).
 
 delete_objects_batch_mixed_tests(_) ->
-    Response = {ok, {{200, "OK"}, [], <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Deleted><Key>sample1.txt</Key></Deleted><Error><Key>sample2.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>">>}},
+    Response = {ok, {{200, "OK"}, [], <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\"><Deleted><Key>sample1.txt</Key></Deleted><Error><Key>sample2.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>">>}},
     meck:expect(erlcloud_httpc, request, httpc_expect(post, Response)),
     Result = erlcloud_s3:delete_objects_batch("BucketName",["sample2.txt"], config()),
     ?_assertEqual([{deleted,["sample1.txt"]}, {error,[{"sample2.txt","AccessDenied","Access Denied"}]}], Result).

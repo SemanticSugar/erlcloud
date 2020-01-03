@@ -77,7 +77,7 @@ You need to clone the repository and download rebar/rebar3 (if it's not already 
 ```
 git clone https://github.com/erlcloud/erlcloud.git
 cd erlcloud
-wget https://s3.amazonaws.com/rebar3/rebar3
+wget https://rebar3.s3.amazonaws.com/rebar3
 chmod a+x rebar3
 ```
 To compile and run erlcloud
