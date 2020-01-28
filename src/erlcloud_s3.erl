@@ -1890,12 +1890,12 @@ aws_region_from_host(Host) ->
 %%  The 1st request ("https://bucket-frankfurt.s3.amazonaws.com/?acl) is
 %%  redirected to "bucket-frankfurt.s3.amazonaws.com" endpoint.
 %%
-%%  The 2nd ("https://?acl.s3.amazonaws.com" with
+%%  The 2nd ("https://s3.amazonaws.com/?acl" with
 %%  {"host","bucket-frankfurt.s3.amazonaws.com"} header) is redirected
 %%  to "bucket-frankfurt.s3.eu-central-1.amazonaws.com".
 %%
 %%  And finally the 3rd request succeeds -
-%%  ("https://?acl.s3.eu-central-1.amazonaws.com" with
+%%  ("https://s3.eu-central-1.amazonaws.com/?acl" with
 %%   {"host","bucket-frankfurt.s3.eu-central-1.amazonaws.com""} header)
 s3_follow_redirect(
     {error, {http_error, StatusCode, StatusLine, ErrBody, _ErrHeaders}} = Response,

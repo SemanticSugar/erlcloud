@@ -174,21 +174,21 @@ set_bucket_notification_test_() ->
 get_bucket_notification_test(_) ->
     Response = {ok, {{200, "OK"}, [], ?S3_BUCKET_EVENT_XML_CONFIG}},
     meck:expect(erlcloud_httpc, request,
-        fun("https://?notification.s3.amazonaws.com", _, _, _, _, _) -> Response end),
+        fun("https://s3.amazonaws.com/?notification", _, _, _, _, _) -> Response end),
     ?_assertEqual(?S3_BUCKET_EVENTS_LIST,
         erlcloud_s3:get_bucket_attribute("BucketName", notification, config())).
 
 get_bucket_notification_no_prefix_test(_) ->
     Response = {ok, {{200, "OK"}, [], ?S3_BUCKET_EVENT_XML_CONFIG_NO_PREFIX}},
     meck:expect(erlcloud_httpc, request,
-        fun("https://?notification.s3.amazonaws.com", _, _, _, _, _) -> Response end),
+        fun("https://s3.amazonaws.com/?notification", _, _, _, _, _) -> Response end),
     ?_assertEqual(?S3_BUCKET_EVENTS_LIST_NO_PREFIX,
         erlcloud_s3:get_bucket_attribute("BucketName", notification, config())).
 
 get_bucket_notification_no_suffix_test(_) ->
     Response = {ok, {{200, "OK"}, [], ?S3_BUCKET_EVENT_XML_CONFIG_NO_SUFFIX}},
     meck:expect(erlcloud_httpc, request,
-        fun("https://?notification.s3.amazonaws.com", _, _, _, _, _) -> Response end),
+        fun("https://s3.amazonaws.com/?notification", _, _, _, _, _) -> Response end),
     ?_assertEqual(?S3_BUCKET_EVENTS_LIST_NO_SUFFIX,
                   erlcloud_s3:get_bucket_attribute("BucketName", notification, config())).
 
