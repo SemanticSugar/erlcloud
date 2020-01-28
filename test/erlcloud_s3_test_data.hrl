@@ -9,7 +9,7 @@
 -author("<Kirill Starikov kstarikov@alertlogic.com>").
 
 -define(S3_BUCKET_EVENT_XML_CONFIG,
-    <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<NotificationConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">
+    <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<NotificationConfiguration xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">
     <TopicConfiguration><Id>Coolname</Id>
     <Topic>arn:aws:sns:us-east-1:000000000000:someuser_test</Topic>
     <Event>s3:ObjectRemoved:Delete</Event>
@@ -25,7 +25,7 @@
     </FilterRule></S3Key></Filter></CloudFunctionConfiguration></NotificationConfiguration>">>).
 
 -define(S3_BUCKET_EVENT_XML_CONFIG_NO_SUFFIX,
-    <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<NotificationConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">
+    <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<NotificationConfiguration xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">
     <TopicConfiguration><Id>Coolname</Id>
     <Topic>arn:aws:sns:us-east-1:000000000000:someuser_test</Topic>
     <Event>s3:ObjectRemoved:Delete</Event>
@@ -41,7 +41,7 @@
     </FilterRule></S3Key></Filter></CloudFunctionConfiguration></NotificationConfiguration>">>).
 
 -define(S3_BUCKET_EVENT_XML_CONFIG_NO_PREFIX,
-    <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<NotificationConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">
+    <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<NotificationConfiguration xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">
     <TopicConfiguration><Id>Coolname</Id>
     <Topic>arn:aws:sns:us-east-1:000000000000:someuser_test</Topic>
     <Event>s3:ObjectRemoved:Delete</Event>
@@ -148,7 +148,7 @@
 
 -define(S3_BUCKET_ENCRYPTION,
     <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n
-       <ServerSideEncryptionConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">
+       <ServerSideEncryptionConfiguration xmlns=\"http://doc.s3.amazonaws.com/2006-03-01/\">
        <Rule><ApplyServerSideEncryptionByDefault>
        <SSEAlgorithm>aws:kms</SSEAlgorithm>
        <KMSMasterKeyID>arn:aws:kms:us-east-1:1234/5678example</KMSMasterKeyID>

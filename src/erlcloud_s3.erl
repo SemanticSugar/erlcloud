@@ -60,7 +60,7 @@
 -include_lib("xmerl/include/xmerl.hrl").
 
 %%% Note that get_bucket_and_key/1 may be used to obtain the Bucket and Key to pass to various
-%%%   functions here, from a URL such as https://s3.amazonaws.com/some_bucket/path_to_file
+%%%   functions here, from a URL such as https://some_bucket.s3.amazonaws.com/path_to_file
 
 -spec new(string(), string()) -> aws_config().
 
@@ -148,7 +148,7 @@ configure(AccessKeyID, SecretAccessKey, Host, Port, Scheme) ->
                                 | 'sa-east-1'.
 
 
--define(XMLNS_S3, "http://s3.amazonaws.com/doc/2006-03-01/").
+-define(XMLNS_S3, "http://doc.s3.amazonaws.com/2006-03-01/").
 -define(XMLNS_SCHEMA_INSTANCE, "http://www.w3.org/2001/XMLSchema-instance").
 
 -spec copy_object(string(), string(), string(), string()) -> proplist() | no_return().
@@ -1451,7 +1451,7 @@ encode_inventory(Inventory) ->
         xmerl:export_simple(
             [{
                 'InventoryConfiguration',
-                [{xmlns, "http://s3.amazonaws.com/doc/2006-03-01/"}],
+                [{xmlns, "http://doc.s3.amazonaws.com/2006-03-01/"}],
                 inv_encode_subtype(Inventory)
             }],
             xmerl_xml
@@ -1653,7 +1653,7 @@ extract_bucket_and_key([Bucket, _S3, _AmazonAWS, _Com], [$/ | Key]) ->
   {Bucket, Key};
 extract_bucket_and_key([_S3, _AmazonAWS, _Com], [$/ | BucketAndKey]) ->
   %% Path-style URL
-  %% For example: s3.amazonaws.com/bucket_name/path/to/key
+  %% For example: bucket_name.s3.amazonaws.com/path/to/key
   [Bucket, Key] = re:split(BucketAndKey, "/", [{return, list}, {parts, 2}]),
   {Bucket, Key}.
 
@@ -1788,7 +1788,7 @@ s3_request4_no_update(Config, Method, Bucket, Path, Subresource, Params, Body,
             {VHostPath, VHostName};
         path ->
             %% Add bucket name into a URL path
-            %% i.e. https://s3.amazonaws.com/bucket/<path>
+            %% i.e. https://bucket.s3.amazonaws.com/<path>
             PathStyleUrl = erlcloud_http:url_encode_loose(
                     lists:flatten(
                         [case Bucket of "" -> ""; _ -> ["/", Bucket] end,
@@ -1887,7 +1887,7 @@ aws_region_from_host(Host) ->
 %% For example: trying to get acl of "bucket-frankfurt" in eu-central-1
 %%  region using path-style access method.
 %%
-%%  The 1st request ("https://s3.amazonaws.com/bucket-frankfurt/?acl) is
+%%  The 1st request ("https://bucket-frankfurt.s3.amazonaws.com/?acl) is
 %%  redirected to "bucket-frankfurt.s3.amazonaws.com" endpoint.
 %%
 %%  The 2nd ("https://s3.amazonaws.com/?acl" with

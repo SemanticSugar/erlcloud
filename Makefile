@@ -90,7 +90,7 @@ travis-install:
 ifeq ($(FORCE_REBAR2),true)
 	rebar get-deps
 else
-	wget https://s3.amazonaws.com/rebar3/rebar3
+	wget https://rebar3.s3.amazonaws.com/rebar3
 	chmod a+x rebar3
 endif
 
