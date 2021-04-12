@@ -12,7 +12,7 @@ env:
   - FORCE_REBAR2=false PATH=$PATH:$PWD
 branches:
   only:
-    - master
+    - main
     - /^[0-9]+\.[0-9]+\.[0-9]+/
 install:
   - make travis-install

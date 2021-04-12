@@ -1,7 +1,7 @@
 {
   "repository": "git@github.com:SemanticSugar/erlcloud",
-  "default_branch": "master",
-  "branch_configuration": "master",
+  "default_branch": "main",
+  "branch_configuration": "main",
   "provider": {
     "id": "github",
     "webhook_url": "https://webhook.buildkite.com/deliver/7521992d20a5ca3b413b8044847f350bb02ff9b06b2e68ad86",
