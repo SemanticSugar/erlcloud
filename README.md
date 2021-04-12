@@ -1,7 +1,5 @@
 # erlcloud: AWS APIs library for Erlang #
 
-[![Build Status](https://secure.travis-ci.org/erlcloud/erlcloud.png?branch=master)](http://travis-ci.org/erlcloud/erlcloud)
-
 This library is not developed or maintained by AWS thus lots of functionality is still missing comparing to [aws-cli](https://aws.amazon.com/cli/) or [boto](https://github.com/boto/boto).
 Required functionality is being added upon request.
 
@@ -128,7 +126,7 @@ If you did not provide your amazon credentials in the environmental variables, t
 erlcloud_ec2:configure(AccessKeyId, SecretAccessKey [, Hostname]).
 ```
 Hostname defaults to non-existing `"ec2.amazonaws.com"` intentionally to avoid mix with US-East-1
-Refer to [aws_config](https://github.com/erlcloud/erlcloud/blob/master/include/erlcloud_aws.hrl) for full description of all services configuration.
+Refer to [aws_config](https://github.com/SemanticSugar/erlcloud/blob/HEAD/include/erlcloud_aws.hrl) for full description of all services configuration.
 
 Configuration object usage:
 ```
@@ -137,7 +135,7 @@ erlcloud_ec2:describe_images(EC2).
 ```
 
 ### aws_config
-[aws_config](https://github.com/erlcloud/erlcloud/blob/master/include/erlcloud_aws.hrl) record contains many valuable defaults,
+[aws_config](https://github.com/SemanticSugar/erlcloud/blob/HEAD/include/erlcloud_aws.hrl) record contains many valuable defaults,
 such as protocols and ports for AWS services. You can always redefine them by making new `#aws_config{}` record and
 changing particular fields, then passing the result to any erlcloud function.
 But if you want to change something in runtime this might be tedious and/or not flexible enough.
