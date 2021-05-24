@@ -1058,7 +1058,9 @@ get_uri(Key, Item) ->
     http_uri:decode(erlcloud_xml:get_text(Key, Item)).
 -else.
 get_uri(Key, Item) ->
-    uri_string:percent_decode(erlcloud_xml:get_text(Key, Item)).
+    uri_string:percent_decode(
+        uri_string:normalize(
+            erlcloud_xml:get_text(Key, Item))).
 -endif.
 
 make_list_virtual_mfa_devices_params(undefined, undefined, undefined) ->
