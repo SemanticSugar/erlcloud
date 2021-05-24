@@ -1,6 +1,5 @@
 -module(erlcloud_aws_tests).
 -include_lib("eunit/include/eunit.hrl").
--include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 
 request_test_() ->
@@ -188,22 +187,12 @@ os_rstenv(Var, Value) ->
 get_url_from_history([{_, {erlcloud_httpc, request, [Url, _, _, _, _, _]}, _}]) ->
     Url.
 
-%% @todo [RTI-9695] Remove OTP22-support
 test_url(ExpScheme, ExpHost, ExpPort, ExpPath, Url) ->
-    case code:ensure_loaded(uri_string) of
-        {module, uri_string} ->
-            Result = uri_string:parse(Url),
-            [?_assertEqual(ExpScheme, maps:get(scheme, Result, undefined)),
-             ?_assertEqual(ExpHost, maps:get(host, Result, undefined)),
-             ?_assertEqual(ExpPort, maps:get(port, Result, 443)),
-             ?_assertEqual(ExpPath, maps:get(path, Result, undefined))];
-        {error, nofile} ->
-            {ok, {Scheme, _, Host, Port, Path, _}} = http_uri:parse(Url),
-            [?_assertEqual(list_to_atom(ExpScheme), Scheme),
-             ?_assertEqual(ExpHost, Host),
-             ?_assertEqual(ExpPort, Port),
-             ?_assertEqual(ExpPath, Path)]
-    end.
+    Result = uri_string:parse(Url),
+    [?_assertEqual(ExpScheme, maps:get(scheme, Result, undefined)),
+     ?_assertEqual(ExpHost, maps:get(host, Result, undefined)),
+     ?_assertEqual(ExpPort, maps:get(port, Result, 443)),
+     ?_assertEqual(ExpPath, maps:get(path, Result, undefined))].
 
 -define(DEFAULT_ACCESS_ID, "XXXXXXXXXXXXXXXXXXX2").
 -define(DEFAULT_ACCESS_KEY, "yyyyyyyyyyyyyyyyyyyyyyyyyy+yyyy/yyyyyyyy2").

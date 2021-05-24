@@ -1635,17 +1635,8 @@ create_notification_param_xml({cloud_function, CF}, Acc) -> [{'CloudFunction', [
 %%%   addressing
 -spec get_bucket_and_key(string()) -> {string(), string()}.
 
-%% @todo [RTI-9695] Remove OTP22-support
 get_bucket_and_key(Uri) ->
-  {Host, Path} =
-    case code:ensure_loaded(uri_string) of
-      {module, uri_string} ->
-        #{host := H, path := P} = uri_string:parse(Uri),
-        {H, P};
-      {error, nofile} ->
-        {ok, {_, _, H, _, P, _}} = http_uri:parse(Uri),
-        {H, P}
-    end,
+  #{host := Host, path := Path} = uri_string:parse(Uri),
   extract_location_fields(Host, Path).
 
 extract_location_fields(Host, Path) ->

@@ -1053,14 +1053,13 @@ data_fun("Integer") -> {erlcloud_xml, get_integer};
 data_fun("Boolean") -> {erlcloud_xml, get_bool};
 data_fun("Uri") -> {?MODULE, get_uri}.
 
-%% @todo [RTI-9695] Remove OTP22-support
+-ifdef(ERLANG_OTP_VERSION_22).
 get_uri(Key, Item) ->
-    case code:ensure_loaded(uri_string) of
-        {module, uri_string} ->
-            uri_string:percent_decode(erlcloud_xml:get_text(Key, Item));
-        {error, nofile} ->
-            http_uri:decode(erlcloud_xml:get_text(Key, Item))
-    end.
+    http_uri:decode(erlcloud_xml:get_text(Key, Item)).
+-else.
+get_uri(Key, Item) ->
+    uri_string:percent_decode(erlcloud_xml:get_text(Key, Item)).
+-endif.
 
 make_list_virtual_mfa_devices_params(undefined, undefined, undefined) ->
     [];
