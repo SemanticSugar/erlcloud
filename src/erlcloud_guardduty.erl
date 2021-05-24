@@ -113,7 +113,7 @@ guardduty_request_no_update(Config, Method, Path, QParam) ->
            Method, Config#aws_config.guardduty_scheme, Config#aws_config.guardduty_host,
            Config#aws_config.guardduty_port, Path, <<>>, Headers, Config) of
         {ok, Data} ->
-            {ok, jsx:decode(Data)};
+            {ok, jsx:decode(Data, [{return_maps, false}])};
         E ->
             E
     end.

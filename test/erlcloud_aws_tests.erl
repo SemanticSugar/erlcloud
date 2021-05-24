@@ -31,7 +31,7 @@ config() ->
 request_default_test(_) ->
     ok = erlcloud_aws:aws_request(get, "host", "/", [], "id", "key"),
     Url = get_url_from_history(meck:history(erlcloud_httpc)),
-    test_url(https, "host", 443, "/", Url).
+    test_url("https", "host", undefined, "/", Url).
 
 request_retry_test(_) ->
     Response400 = {ok, {{400, "Bad Request"}, [],
@@ -79,12 +79,12 @@ request_retry_test(_) ->
 request_prot_host_port_str_test(_) ->
     ok = erlcloud_aws:aws_request(get, "http", "host1", "9999", "/path1", [], "id", "key"),
     Url = get_url_from_history(meck:history(erlcloud_httpc)),
-    test_url(http, "host1", 9999, "/path1", Url).
+    test_url("http", "host1", 9999, "/path1", Url).
 
 request_prot_host_port_int_test(_) ->
     ok = erlcloud_aws:aws_request(get, "http", "host1", 9999, "/path1", [], "id", "key"),
     Url = get_url_from_history(meck:history(erlcloud_httpc)),
-    test_url(http, "host1", 9999, "/path1", Url).
+    test_url("http", "host1", 9999, "/path1", Url).
 
 get_service_status_test(_) ->
     StatusJsonS3 = jsx:encode(
@@ -147,7 +147,7 @@ get_service_status_test(_) ->
     OKStatusEmpty = erlcloud_aws:get_service_status(["sqs", "sns"]),
     meck:expect(erlcloud_httpc, request, fun(_,_,_,_,_,_) -> {ok, {{200, "OK"}, [], StatusJsonS3}} end),
     OKStatus = erlcloud_aws:get_service_status(["cloudformation", "sns", "vpc"]),
-    
+
     [?_assertEqual(proplists:get_value(<<"status">>, S3Status), 0),
      ?_assertEqual(proplists:get_value(<<"service">>, S3Status), <<"s3-eu-central-1">>),
      ?_assertEqual(proplists:get_value(<<"status">>, EC2Status), 2),
@@ -189,11 +189,11 @@ get_url_from_history([{_, {erlcloud_httpc, request, [Url, _, _, _, _, _]}, _}]) 
     Url.
 
 test_url(ExpScheme, ExpHost, ExpPort, ExpPath, Url) ->
-    {ok, {Scheme, _UserInfo, Host, Port, Path, _Query}} = http_uri:parse(Url),
-    [?_assertEqual(ExpScheme, Scheme),
-     ?_assertEqual(ExpHost, Host),
-     ?_assertEqual(ExpPort, Port),
-     ?_assertEqual(ExpPath, Path)].
+    Result = uri_string:parse(Url),
+    [?_assertEqual(ExpScheme, maps:get(scheme, Result, undefined)),
+     ?_assertEqual(ExpHost, maps:get(host, Result, undefined)),
+     ?_assertEqual(ExpPort, maps:get(port, Result, undefined)),
+     ?_assertEqual(ExpPath, maps:get(path, Result, undefined))].
 
 
 -define(DEFAULT_ACCESS_ID, "XXXXXXXXXXXXXXXXXXX2").
@@ -237,7 +237,7 @@ profile_indirect_test_() ->
            erlcloud_aws:profile( blah ) )
        )
     }.
-    
+
 profile_indirect_role_test_() ->
     {setup, fun profiles_assume_setup/0, fun profiles_assume_cleanup/1,
      ?_test(
@@ -309,14 +309,14 @@ profile_undefined_profile_test_() ->
         ?assertMatch( {error, _}, erlcloud_aws:profile( what ) )
        )
     }.
-    
+
 profile_undefined_indirect_profile_test_() ->
     {setup, fun profiles_test_setup/0, fun profiles_test_cleanup/1,
      ?_test(
         ?assertMatch( {error, _}, erlcloud_aws:profile( whoa ) )
        )
     }.
-    
+
 
 profiles_test_setup() ->
     Profile = <<"
