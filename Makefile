@@ -68,7 +68,7 @@ else
 	@$(REBAR) dialyzer
 endif
 
-check-eunit: check_warnings eunit
+check-eunit: eunit
 ifeq ($(REBAR_VSN),2)
 	dialyzer --verbose --no_check_plt --no_native --fullpath \
 		$(CHECK_EUNIT_FILES) \

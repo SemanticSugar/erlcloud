@@ -31,7 +31,7 @@ config() ->
 request_default_test(_) ->
     ok = erlcloud_aws:aws_request(get, "host", "/", [], "id", "key"),
     Url = get_url_from_history(meck:history(erlcloud_httpc)),
-    test_url("https", "host", undefined, "/", Url).
+    test_url("https", "host", 443, "/", Url).
 
 request_retry_test(_) ->
     Response400 = {ok, {{400, "Bad Request"}, [],
@@ -188,13 +188,22 @@ os_rstenv(Var, Value) ->
 get_url_from_history([{_, {erlcloud_httpc, request, [Url, _, _, _, _, _]}, _}]) ->
     Url.
 
+%% @todo [RTI-9695] Remove OTP22-support
 test_url(ExpScheme, ExpHost, ExpPort, ExpPath, Url) ->
-    Result = uri_string:parse(Url),
-    [?_assertEqual(ExpScheme, maps:get(scheme, Result, undefined)),
-     ?_assertEqual(ExpHost, maps:get(host, Result, undefined)),
-     ?_assertEqual(ExpPort, maps:get(port, Result, undefined)),
-     ?_assertEqual(ExpPath, maps:get(path, Result, undefined))].
-
+    case code:ensure_loaded(uri_string) of
+        {module, uri_string} ->
+            Result = uri_string:parse(Url),
+            [?_assertEqual(ExpScheme, maps:get(scheme, Result, undefined)),
+             ?_assertEqual(ExpHost, maps:get(host, Result, undefined)),
+             ?_assertEqual(ExpPort, maps:get(port, Result, 443)),
+             ?_assertEqual(ExpPath, maps:get(path, Result, undefined))];
+        {error, nofile} ->
+            {ok, {Scheme, _, Host, Port, Path, _}} = http_uri:parse(Url),
+            [?_assertEqual(list_to_atom(ExpScheme), Scheme),
+             ?_assertEqual(ExpHost, Host),
+             ?_assertEqual(ExpPort, Port),
+             ?_assertEqual(ExpPath, Path)]
+    end.
 
 -define(DEFAULT_ACCESS_ID, "XXXXXXXXXXXXXXXXXXX2").
 -define(DEFAULT_ACCESS_KEY, "yyyyyyyyyyyyyyyyyyyyyyyyyy+yyyy/yyyyyyyy2").
