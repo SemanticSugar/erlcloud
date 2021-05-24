@@ -1643,7 +1643,7 @@ get_bucket_and_key(Uri) ->
         #{host := H, path := P} = uri_string:parse(Uri),
         {H, P};
       {error, nofile} ->
-        {_, _, H, _, P, _} = http_uri:parse(Uri),
+        {ok, {_, _, H, _, P, _}} = http_uri:parse(Uri),
         {H, P}
     end,
   extract_location_fields(Host, Path).
