@@ -147,7 +147,7 @@ validate_param(Param, Expected) ->
             Expected1 = lists:delete({Key, Value}, Expected),
             case length(Expected) - 1 =:= length(Expected1) of
                 true -> ok;
-                false -> 
+                false ->
                     ?debugFmt("Parameter not expected: ~p", [{Key, Value}])
             end,
             ?assertEqual(length(Expected) - 1, length(Expected1)),
@@ -166,9 +166,9 @@ validate_params(Body, Expected) ->
 %% Validates the query body and responds with the provided response.
 -spec input_expect(string(), [expected_param()]) -> fun().
 input_expect(Response, Expected) ->
-    fun(_Url, post, _Headers, Body, _Timeout, _Config) -> 
+    fun(_Url, post, _Headers, Body, _Timeout, _Config) ->
             validate_params(Body, Expected),
-            {ok, {{200, "OK"}, [], list_to_binary(Response)}} 
+            {ok, {{200, "OK"}, [], list_to_binary(Response)}}
     end.
 
 %% input_test converts an input_test specifier into an eunit test generator
@@ -176,7 +176,7 @@ input_expect(Response, Expected) ->
 -spec input_test(string(), input_test_spec()) -> tuple().
 input_test(Response, {Line, {Description, Fun, Params}}) when
       is_list(Description) ->
-    {Description, 
+    {Description,
      {Line,
       fun() ->
               meck:expect(erlcloud_httpc, request, input_expect(Response, Params)),
@@ -220,19 +220,19 @@ output_test(Fun, {Line, {Description, Response, Result}}, OutputFun) ->
               io:format("Result: ~p~n", [Result]),
               ?assertEqual(Result, Actual)
       end}}.
-      
+
 %% output_tests converts a list of output_test specifiers into an eunit test generator
--spec output_tests(fun(), [output_test_spec()]) -> [term()].       
+-spec output_tests(fun(), [output_test_spec()]) -> [term()].
 output_tests(Fun, Tests) ->
     [output_test(Fun, Test, fun output_expect/1) || Test <- Tests].
 
 %% output_tests converts a list of output_test specifiers into an eunit test generator
--spec output_tests_seq(fun(), [output_test_spec()]) -> [term()].       
+-spec output_tests_seq(fun(), [output_test_spec()]) -> [term()].
 output_tests_seq(Fun, Tests) ->
     [output_test(Fun, Test, fun output_expect_seq/1) || Test <- Tests].
 
 get_account_summary_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning account summary.",
              ?_f(erlcloud_iam:get_account_summary()),
@@ -535,7 +535,7 @@ list_virtual_mfa_devices_output_test(_) ->
             </GetAccountPasswordPolicyResponse>").
 
 get_account_password_policy_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning account password policy.",
              ?_f(erlcloud_iam:get_account_password_policy()),
@@ -582,7 +582,7 @@ get_account_password_policy_output_tests(_) ->
          </GetUserResponse>").
 
 get_user_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning User.",
              ?_f(erlcloud_iam:get_user()),
@@ -622,7 +622,7 @@ get_user_output_tests(_) ->
          </GetGroupPolicyResponse>").
 
 get_group_policy_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning group policy.",
              ?_f(erlcloud_iam:get_group_policy("Admins", "AdminRoot")),
@@ -660,7 +660,7 @@ get_group_policy_output_tests(_) ->
          </GetLoginProfileResponse>").
 
 get_login_profile_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning login profile.",
              ?_f(erlcloud_iam:get_login_profile("Bob")),
@@ -695,7 +695,7 @@ get_login_profile_output_tests(_) ->
          </GetRolePolicyResponse>").
 
 get_role_policy_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning role policy.",
              ?_f(erlcloud_iam:get_role_policy("S3Access", "S3AccessPolicy")),
@@ -732,7 +732,7 @@ get_role_policy_output_tests(_) ->
          </GetUserPolicyResponse>").
 
 get_user_policy_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning user policy.",
              ?_f(erlcloud_iam:get_user_policy("Bob", "AllAccessPolicy")),
@@ -755,9 +755,9 @@ get_user_policy_output_tests(_) ->
              })
             ],
     output_tests(?_f(erlcloud_iam:get_user_policy("Bob", "AllAccessPolicy")), Tests).
-    
+
 list_access_keys_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning all users in an account.",
              ?_f(erlcloud_iam:list_access_keys("test")),
@@ -812,7 +812,7 @@ list_access_keys_output_tests(_) ->
                         {status, "Inactive"}]
                       ]}})
             ],
-    output_tests(?_f(erlcloud_iam:list_access_keys("test")), Tests). 
+    output_tests(?_f(erlcloud_iam:list_access_keys("test")), Tests).
 
 list_access_keys_all_output_tests(_) ->
     Tests = [?_iam_test(
@@ -883,7 +883,7 @@ list_access_keys_all_output_tests(_) ->
                         {status, "Inactive"}]
                       ]}})
             ],
-    output_tests_seq(?_f(erlcloud_iam:list_access_keys_all("test")), Tests). 
+    output_tests_seq(?_f(erlcloud_iam:list_access_keys_all("test")), Tests).
 
 get_access_key_last_used_output() ->
 "<GetAccessKeyLastUsedResponse xmlns=\"https://iam.amazonaws.com/doc/2010-05-08/\">
@@ -928,7 +928,7 @@ get_access_key_last_used_output_tests() ->
 %% ListUsers test based on the API examples:
 %% http://docs.aws.amazon.com/IAM/latest/APIReference/API_ListUsers.html
 list_users_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning all users in an account.",
              ?_f(erlcloud_iam:list_users("test")),
@@ -945,7 +945,7 @@ list_users_input_tests(_) ->
    </ResponseMetadata>
 </ListUsersResponse>",
     input_tests(Response, Tests).
- 
+
 list_users_output_tests(_) ->
     Tests = [?_iam_test(
                 {"This lists all users in your account",
@@ -989,7 +989,7 @@ list_users_output_tests(_) ->
                        {password_last_used,{{2014,9,24},{16,18,7}}}]]}
                 })
                 ],
-    output_tests(?_f(erlcloud_iam:list_users("test")), Tests). 
+    output_tests(?_f(erlcloud_iam:list_users("test")), Tests).
 
 
 list_users_all_output_tests(_) ->
@@ -1074,13 +1074,13 @@ list_users_all_output_tests(_) ->
                        {password_last_used,{{2014,9,24},{16,18,7}}}]]}
                 })
                 ],
-    output_tests_seq(?_f(erlcloud_iam:list_users_all("test")), Tests). 
+    output_tests_seq(?_f(erlcloud_iam:list_users_all("test")), Tests).
 
 
 %% ListGroups test based on the API examples:
 %% http://docs.aws.amazon.com/IAM/latest/APIReference/API_ListGroups.html
 list_groups_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning all groups in an account.",
              ?_f(erlcloud_iam:list_groups("test")),
@@ -1097,7 +1097,7 @@ list_groups_input_tests(_) ->
    </ResponseMetadata>
 </ListGroupsResponse>",
     input_tests(Response, Tests).
- 
+
 list_groups_output_tests(_) ->
     Tests = [?_iam_test(
                 {"This lists all groups in your account",
@@ -1108,7 +1108,7 @@ list_groups_output_tests(_) ->
                                 <Path>/division_abc/</Path>
                                 <GroupName>Admins</GroupName>
                                 <GroupId>AGPACKCEVSQ6C2EXAMPLE</GroupId>
-                                <Arn>arn:aws:iam::123456789012:group/Admins</Arn> 
+                                <Arn>arn:aws:iam::123456789012:group/Admins</Arn>
                                 <CreateDate>2012-05-08T23:34:01Z</CreateDate>
                              </member>
                              <member>
@@ -1161,7 +1161,7 @@ list_groups_all_output_tests(_) ->
                                  <Path>/division_abc/</Path>
                                  <GroupName>Admins</GroupName>
                                  <GroupId>AGPACKCEVSQ6C2EXAMPLE</GroupId>
-                                 <Arn>arn:aws:iam::123456789012:group/Admins</Arn> 
+                                 <Arn>arn:aws:iam::123456789012:group/Admins</Arn>
                                  <CreateDate>2012-05-08T23:34:01Z</CreateDate>
                               </member>
                               <member>
@@ -1193,7 +1193,7 @@ list_groups_all_output_tests(_) ->
                                  <Path>/division_abc/</Path>
                                  <GroupName>Admins</GroupName>
                                  <GroupId>AGPACKCEVSQ6C2EXAMPLE</GroupId>
-                                 <Arn>arn:aws:iam::123456789012:group/Admins</Arn> 
+                                 <Arn>arn:aws:iam::123456789012:group/Admins</Arn>
                                  <CreateDate>2012-05-08T23:34:01Z</CreateDate>
                               </member>
                               <member>
@@ -1253,7 +1253,7 @@ list_groups_all_output_tests(_) ->
 %% ListRoles test based on the API examples:
 %% http://docs.aws.amazon.com/IAM/latest/APIReference/API_ListRoles.html
 list_roles_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning all roles in an account.",
              ?_f(erlcloud_iam:list_roles("test")),
@@ -1270,7 +1270,7 @@ list_roles_input_tests(_) ->
            </ResponseMetadata>
         </ListRolesResponse>",
     input_tests(Response, Tests).
- 
+
 list_roles_output_tests(_) ->
     Tests = [?_iam_test(
                 {"This lists all roles in your account",
@@ -1315,7 +1315,7 @@ list_roles_output_tests(_) ->
                              {arn, "arn:aws:iam::123456789012:role/application_abc/component_xyz/SDBAccess"}]
                          ]}})
                 ],
-    output_tests(?_f(erlcloud_iam:list_roles("test")), Tests). 
+    output_tests(?_f(erlcloud_iam:list_roles("test")), Tests).
 
 list_roles_all_output_tests(_) ->
     Tests = [?_iam_test(
@@ -1400,7 +1400,7 @@ list_roles_all_output_tests(_) ->
                              {arn, "arn:aws:iam::123456789012:role/application_abc/component_xyz/SDBAccess"}]
                          ]}})
                 ],
-    output_tests_seq(?_f(erlcloud_iam:list_roles_all("test")), Tests). 
+    output_tests_seq(?_f(erlcloud_iam:list_roles_all("test")), Tests).
 
 -define(LIST_GROUPS_FOR_USER_RESP,
         "<ListGroupsForUserResponse>
@@ -1421,7 +1421,7 @@ list_roles_all_output_tests(_) ->
        </ListGroupsForUserResponse>").
 
 list_groups_for_user_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning groups for a user.",
              ?_f(erlcloud_iam:list_groups_for_user("Bob")),
@@ -1496,7 +1496,7 @@ list_groups_for_user_all_output_tests(_) ->
          </ListUserPoliciesResponse>").
 
 list_user_policies_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning policies for a user.",
              ?_f(erlcloud_iam:list_user_policies("Bob")),
@@ -1558,7 +1558,7 @@ list_user_policies_all_output_tests(_) ->
        </ListGroupPoliciesResponse>").
 
 list_group_policies_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning policies for a group.",
              ?_f(erlcloud_iam:list_group_policies("Admins")),
@@ -1620,7 +1620,7 @@ list_group_policies_all_output_tests(_) ->
          </ListRolePoliciesResponse>").
 
 list_role_policies_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning policies for a role.",
              ?_f(erlcloud_iam:list_role_policies("S3Access")),
@@ -1696,7 +1696,7 @@ list_role_policies_all_output_tests(_) ->
          </ListInstanceProfilesResponse>").
 
 list_instance_profiles_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning instance profiles.",
              ?_f(erlcloud_iam:list_instance_profiles()),
@@ -1814,7 +1814,7 @@ list_instance_profiles_all_output_tests(_) ->
         </GetInstanceProfileResponse>").
 
 get_instance_profile_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning instance profile.",
              ?_f(erlcloud_iam:get_instance_profile("Webserver")),
@@ -1993,7 +1993,7 @@ get_instance_profile_output_tests(_) ->
         </GetAccountAuthorizationDetailsResponse>").
 
 get_account_authorization_details_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning the authorization details.",
              ?_f(erlcloud_iam:get_account_authorization_details()),
@@ -2117,7 +2117,7 @@ get_account_authorization_details_output_tests(_) ->
         </GenerateCredentialReportResponse>").
 
 generate_credential_report_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
          {"Test generating credential report.",
           ?_f(erlcloud_iam:generate_credential_report()),
@@ -2125,7 +2125,7 @@ generate_credential_report_input_tests(_) ->
            {"Action", "GenerateCredentialReport"}
           ]})
         ],
-    
+
     input_tests(?GENERATE_CREDENTIAL_REPORT_RESP, Tests).
 
 generate_credential_report_output_tests(_) ->
@@ -2151,7 +2151,7 @@ generate_credential_report_output_tests(_) ->
          </GetCredentialReportResponse>").
 
 get_credential_report_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
          {"Test get credential report.",
           ?_f(erlcloud_iam:get_credential_report()),
@@ -2159,7 +2159,7 @@ get_credential_report_input_tests(_) ->
            {"Action", "GetCredentialReport"}
           ]})
         ],
-    
+
     input_tests(?GET_CREDENTIAL_REPORT_RESP, Tests).
 
 get_credential_report_output_tests(_) ->
@@ -2190,21 +2190,21 @@ get_credential_report_output_tests(_) ->
         </ListAttachedUserPoliciesResponse>").
 
 list_attached_user_policies_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning the list of user attached policies.",
              ?_f(erlcloud_iam:list_attached_user_policies("Alice", "/")),
              [
               {"Action", "ListAttachedUserPolicies"},
               {"UserName", "Alice"},
-              {"PathPrefix", http_uri:encode("/")}
+              {"PathPrefix", "%2F"}
               ]})
         ],
 
     input_tests(?LIST_ATTACHED_USER_POLICIES_RESP, Tests).
 
 list_attached_user_policies_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns the list of user attached policies.",
             ?LIST_ATTACHED_USER_POLICIES_RESP,
@@ -2215,7 +2215,7 @@ list_attached_user_policies_output_tests(_) ->
     output_tests(?_f(erlcloud_iam:list_attached_user_policies("Alice", "/")), Tests).
 
 list_attached_user_policies_all_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns the list of user attached policies.",
             ["<ListAttachedUserPoliciesResponse xmlns=\"https://iam.amazonaws.com/doc/2010-05-08/\">
@@ -2259,21 +2259,21 @@ list_attached_user_policies_all_output_tests(_) ->
         </ListAttachedGroupPoliciesResponse>").
 
 list_attached_group_policies_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning the list of group attached policies.",
              ?_f(erlcloud_iam:list_attached_group_policies("ReadOnlyUsers", "/")),
              [
               {"Action", "ListAttachedGroupPolicies"},
               {"GroupName", "ReadOnlyUsers"},
-              {"PathPrefix", http_uri:encode("/")}
+              {"PathPrefix", "%2F"}
               ]})
         ],
 
     input_tests(?LIST_ATTACHED_GROUP_POLICIES_RESP, Tests).
 
 list_attached_group_policies_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns the list of group attached policies.",
             ?LIST_ATTACHED_GROUP_POLICIES_RESP,
@@ -2284,7 +2284,7 @@ list_attached_group_policies_output_tests(_) ->
     output_tests(?_f(erlcloud_iam:list_attached_group_policies("ReadOnlyUsers", "/")), Tests).
 
 list_attached_group_policies_all_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns the list of group attached policies.",
             ["<ListAttachedGroupPoliciesResponse xmlns=\"https://iam.amazonaws.com/doc/2010-05-08/\">
@@ -2328,21 +2328,21 @@ list_attached_group_policies_all_output_tests(_) ->
         </ListAttachedRolePoliciesResponse>").
 
 list_attached_role_policies_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"Test returning the list of role attached policies.",
              ?_f(erlcloud_iam:list_attached_role_policies("ReadOnlyRole", "/")),
              [
               {"Action", "ListAttachedRolePolicies"},
               {"RoleName", "ReadOnlyRole"},
-              {"PathPrefix", http_uri:encode("/")}
+              {"PathPrefix", "%2F"}
               ]})
         ],
 
     input_tests(?LIST_ATTACHED_ROLE_POLICIES_RESP, Tests).
 
 list_attached_role_policies_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns the list of role attached policies.",
             ?LIST_ATTACHED_ROLE_POLICIES_RESP,
@@ -2353,7 +2353,7 @@ list_attached_role_policies_output_tests(_) ->
     output_tests(?_f(erlcloud_iam:list_attached_role_policies("ReadOnlyRole", "/")), Tests).
 
 list_attached_role_policies_all_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns the list of role attached policies.",
             ["<ListAttachedRolePoliciesResponse xmlns=\"https://iam.amazonaws.com/doc/2010-05-08/\">
@@ -2380,7 +2380,7 @@ list_attached_role_policies_all_output_tests(_) ->
         ],
     output_tests_seq(?_f(erlcloud_iam:list_attached_role_policies_all("ReadOnlyRole", "/")), Tests).
 
--define(GET_POLICY_RESP, 
+-define(GET_POLICY_RESP,
         "<GetPolicyResponse xmlns=\"https://iam.amazonaws.com/doc/2010-05-08/\">
           <GetPolicyResult>
             <Policy>
@@ -2534,7 +2534,7 @@ list_entities_for_policy_input_tests(_) ->
         ?_f(erlcloud_iam:list_entities_for_policy("test")),
         [
           {"Action", "ListEntitiesForPolicy"},
-          {"PathPrefix", http_uri:encode("/")},
+          {"PathPrefix", "%2F"},
           {"PolicyArn", "test"}
         ]})
     ],
@@ -2658,14 +2658,14 @@ get_policy_input_tests(_) ->
              ?_f(erlcloud_iam:get_policy("arn:aws:iam::123456789012:policy/S3-read-only-example-bucket")),
              [
               {"Action", "GetPolicy"},
-              {"PolicyArn", http_uri:encode("arn:aws:iam::123456789012:policy/S3-read-only-example-bucket")}
+              {"PolicyArn", "arn%3Aaws%3Aiam%3A%3A123456789012%3Apolicy%2FS3-read-only-example-bucket"}
               ]})
         ],
 
     input_tests(?GET_POLICY_RESP, Tests).
 
 get_policy_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns a policy.",
             ?GET_POLICY_RESP,
@@ -2706,7 +2706,7 @@ get_policy_version_input_tests(_) ->
              ?_f(erlcloud_iam:get_policy_version("arn:aws:iam::123456789012:policy/S3-read-only-example-bucket", "v1")),
              [
               {"Action", "GetPolicyVersion"},
-              {"PolicyArn", http_uri:encode("arn:aws:iam::123456789012:policy/S3-read-only-example-bucket")},
+              {"PolicyArn", "arn%3Aaws%3Aiam%3A%3A123456789012%3Apolicy%2FS3-read-only-example-bucket"},
               {"VersionId", "v1"}
               ]})
         ],
@@ -2714,14 +2714,14 @@ get_policy_version_input_tests(_) ->
     input_tests(?GET_POLICY_VERSION_RESP, Tests).
 
 get_policy_version_output_tests(_) ->
-    Tests = 
+    Tests =
         [?_iam_test(
             {"This returns a policy version.",
             ?GET_POLICY_VERSION_RESP,
             {ok, [[{create_date, {{2014,9,15},{20,31,47}}},
                    {version_id, "v1"},
                    {is_default_version, true},
-                   {policy_document, 
+                   {policy_document,
                         "\n              {\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:Get*\",\"s3:List*\"],\n              \"Resource\":[\"arn:aws:s3:::EXAMPLE-BUCKET\",\"arn:aws:s3:::EXAMPLE-BUCKET/*\"]}]}\n              "}
                  ]]}
             })
@@ -2805,7 +2805,7 @@ simulate_custom_policy_input_test(_) ->
                                                       PolicyDoc2])),
              [
               {"Action", "SimulateCustomPolicy"},
-              {"ActionNames.member.1", http_uri:encode(Action)},
+              {"ActionNames.member.1", "s3%3AListBucket"},
               {"PolicyInputList.member.1", PolicyDoc1},
               {"PolicyInputList.member.2", PolicyDoc2},
               {"MaxItems", "1000"}
@@ -2816,9 +2816,9 @@ simulate_custom_policy_input_test(_) ->
                                                       [PolicyDoc1],
                                                       ContextEntries)),
               [{"Action","SimulateCustomPolicy"},
-               {"ActionNames.member.1", http_uri:encode(Action)},
+               {"ActionNames.member.1", "s3%3AListBucket"},
                {"PolicyInputList.member.1","policy_doc1"},
-               {"ContextEntries.member.1.ContextKeyName",http_uri:encode("aws:MultiFactorAuthPresent")},
+               {"ContextEntries.member.1.ContextKeyName","aws%3AMultiFactorAuthPresent"},
                {"ContextEntries.member.1.ContextKeyType","boolean"},
                {"ContextEntries.member.1.ContextKeyValues.member.1","true"},
                {"MaxItems","1000"}]})
@@ -2863,8 +2863,8 @@ simulate_principal_policy_input_test(_) ->
                                                         [Action])),
              [
               {"Action", "SimulatePrincipalPolicy"},
-              {"ActionNames.member.1", http_uri:encode(Action)},
-              {"PolicySourceArn", http_uri:encode(Principal)},
+              {"ActionNames.member.1", "s3%3APutObject"},
+              {"PolicySourceArn", "arn%3Aaws%3Aiam%3A%3A%3Auser%2FJill"},
               {"MaxItems", "1000"}
               ]})
         ],

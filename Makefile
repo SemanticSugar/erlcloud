@@ -54,7 +54,7 @@ ifeq ($(REBAR_VSN),2)
 	@$(REBAR) compile
 	@$(REBAR) eunit skip_deps=true
 else
-	@$(REBAR) eunit
+	@$(REBAR) do eunit, cover
 endif
 
 check:

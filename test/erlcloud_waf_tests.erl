@@ -42,14 +42,14 @@
                                 field_to_match = #waf_field_to_match{type = query_string},
                                 positional_constraint = contains,
                                 target_string = "foobar",
-                                text_transformation = none}}). 
+                                text_transformation = none}}).
 
 -define(UPDATE_IP_SET,
     #waf_ip_set_update{
         action = insert,
         ip_set_descriptor = #waf_ip_set_descriptor{
                                 type = ip_v4,
-                                value = "10.0.4.0/24"}}). 
+                                value = "10.0.4.0/24"}}).
 
 -define(UPDATE_RULE,
     #waf_rule_update{
@@ -57,7 +57,7 @@
         predicate = #waf_rule_predicate{
                         data_id = ?CREATE_ID,
                         negated = true,
-                        type = ip_match}}). 
+                        type = ip_match}}).
 
 -define(UPDATE_SIZE_CONSTRAINT_SET,
     #waf_size_constraint_update{
@@ -86,7 +86,7 @@
             action = block,
             priority = 1,
             rule_id = ?RULE_ID}}]}]).
- 
+
 -define(UPDATE_XSS_MATCH_SET,
     #waf_xss_match_set_update{
         action = insert,
@@ -126,7 +126,7 @@ operation_test_() ->
       fun get_web_acl_tests/1,
       fun get_sampled_requests_tests/1,
       fun get_xss_match_set_tests/1,
-      
+
       fun list_byte_match_sets_tests/1,
       fun list_ip_sets_tests/1,
       fun list_rules_tests/1,
@@ -311,7 +311,7 @@ get_change_token_status_tests(_) ->
     PostData = jsx:encode([{<<"ChangeToken">>, ?CHANGE_TOKEN}]),
     Response = [{<<"ChangeTokenStatus">>, <<"INSYNC">>}],
     all_tests(Action, Function, PostData, Response).
-    
+
 get_byte_match_set_tests(_) ->
     Action = "GetByteMatchSet",
     Function = ?_f(erlcloud_waf:get_byte_match_set(?CREATE_ID)),
@@ -567,7 +567,7 @@ update_web_acl_tests(_) ->
                 {<<"RuleId">>, ?RULE_ID}]}]]}]),
     Response = [{<<"ChangeToken">>, ?CHANGE_TOKEN}],
     all_tests(Action, Function, PostData, Response).
-   
+
 update_xss_match_set_tests(_) ->
     Action = "UpdateXssMatchSet",
     Function = ?_f(erlcloud_waf:update_xss_match_set(?CHANGE_TOKEN, ?CREATE_ID, [?UPDATE_XSS_MATCH_SET])),
@@ -608,8 +608,8 @@ sort_json(V) ->
 %% verifies that the parameters in the body match the expected parameters
 -spec validate_body(binary(), expected_body()) -> ok.
 validate_body(Body, Expected) ->
-    Want = sort_json(jsx:decode(Expected)),
-    Actual = sort_json(jsx:decode(Body)),
+    Want = sort_json(jsx:decode(Expected, [{return_maps, false}])),
+    Actual = sort_json(jsx:decode(Body, [{return_maps, false}])),
     case Want =:= Actual of
         true -> ok;
         false ->
@@ -694,6 +694,6 @@ all_tests(Action, Function, PostData, Response) ->
                     jsx:encode(Response),
                     {ok, Response}}
                    )],
-    
+
     input_tests(<<>>, InputTests) ++
         output_tests(Function, OutputTests).

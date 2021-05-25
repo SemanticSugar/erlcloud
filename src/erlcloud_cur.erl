@@ -102,7 +102,7 @@ request(Config, Request) ->
     case erlcloud_aws:request_to_return(Result) of
         {ok, {_, <<>>}}     -> {ok, #{}};
         {ok, {_, RespBody}} ->
-            {ok, jsx:decode(RespBody, [return_maps])};
+            {ok, jsx:decode(RespBody)};
         {error, _} = Error  -> Error
     end.
 

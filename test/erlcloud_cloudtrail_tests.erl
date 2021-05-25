@@ -5,7 +5,7 @@
 -include("erlcloud_aws.hrl").
 
 %% Unit tests for cloudtrail.
-%% These tests work by using meck to mock erlcloud_httpc. 
+%% These tests work by using meck to mock erlcloud_httpc.
 %% There are two classes of test: input and output.
 %%
 %% Input tests verify that different function args produce the desired JSON request.
@@ -71,8 +71,8 @@ sort_json(V) ->
 %% verifies that the parameters in the body match the expected parameters
 -spec validate_body(binary(), expected_body()) -> ok.
 validate_body(Body, Expected) ->
-    Want = sort_json(jsx:decode(list_to_binary(Expected))),
-    Actual = sort_json(jsx:decode(Body)),
+    Want = sort_json(jsx:decode(list_to_binary(Expected), [{return_maps, false}])),
+    Actual = sort_json(jsx:decode(Body, [{return_maps, false}])),
     case Want =:= Actual of
         true -> ok;
         false ->
@@ -103,7 +103,7 @@ input_test(Response, {Line, {Description, Fun, Expected}}) when
                     secret_access_key=string:copies("a", 40)
               },
               put(aws_config, AwsConfig),
-              
+
               Fun()
       end}}.
 
@@ -160,7 +160,7 @@ output_tests(Fun, Tests) ->
 %% CreateTrail test based on the API examples:
 %% http://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_CreateTrail.html
 create_trail_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"CreateTrail example request",
              ?_f(erlcloud_cloudtrail:create_trail("test", "test_bucket", "test_prefix", "test_topic", true, erlcloud_aws:default_config())), "
@@ -186,10 +186,10 @@ create_trail_output_tests(_) ->
                     \"SnsTopicName\": \"test_topic\",
                     \"IncludeGlobalServiceEvents\": \"true\"
                 }">>,
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"CreateTrail example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:create_trail("test", "test_bucket", "test_prefix", "test_topic", true, erlcloud_aws:default_config())), Tests).
 
@@ -197,7 +197,7 @@ create_trail_output_tests(_) ->
 %% DeleteTrail test based on the API examples:
 %% http://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DeleteTrail.html
 delete_trail_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"DeleteTrail example request",
              ?_f(erlcloud_cloudtrail:delete_trail("test", erlcloud_aws:default_config())), "
@@ -213,17 +213,17 @@ delete_trail_input_tests(_) ->
 
 delete_trail_output_tests(_) ->
     Response = <<"{}">>,
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"DeleteTrail example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:delete_trail("test", erlcloud_aws:default_config())), Tests).
 
 %% StartLogging test based on the API examples:
 %% http://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StartLogging.html
 start_logging_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"StartLogging example request",
              ?_f(erlcloud_cloudtrail:start_logging("test", erlcloud_aws:default_config())), "
@@ -239,17 +239,17 @@ start_logging_input_tests(_) ->
 
 start_logging_output_tests(_) ->
     Response = <<"{}">>,
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"StartLogging example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:start_logging("test", erlcloud_aws:default_config())), Tests).
 
 %% StopLogging test based on the API examples:
 %% http://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StopLogging.html
 stop_logging_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"StopLogging example request",
              ?_f(erlcloud_cloudtrail:stop_logging("test", erlcloud_aws:default_config())), "
@@ -265,17 +265,17 @@ stop_logging_input_tests(_) ->
 
 stop_logging_output_tests(_) ->
     Response = <<"{}">>,
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"StopLogging example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:stop_logging("test", erlcloud_aws:default_config())), Tests).
 
 %% DescribeTrails test based on the API examples:
 %% http://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html
 describe_trails_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"DescribeTrails example request",
              ?_f(erlcloud_cloudtrail:describe_trails(["test"], erlcloud_aws:default_config())), "
@@ -300,10 +300,10 @@ describe_trails_output_tests(_) ->
                     } ]
                 }">>,
 
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"DescribeTrails example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:describe_trails(["test"], erlcloud_aws:default_config())), Tests).
 
@@ -341,14 +341,14 @@ get_event_selectors_output_tests(_) ->
     Tests =
         [?_cloudtrail_test(
             {"GetEventSelectors example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:get_event_selectors("test", erlcloud_aws:default_config())), Tests).
 
 %% GetTrailStatus test based on the API examples:
 %% http://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_GetTrailStatus.html
 get_trail_status_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"GetTrailStatus example request",
              ?_f(erlcloud_cloudtrail:get_trail_status("test", erlcloud_aws:default_config())), "
@@ -373,17 +373,17 @@ get_trail_status_output_tests(_) ->
                     \"StopLoggingTime\": \"12345\"
                  }">>,
 
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"GetTrailStatus example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:get_trail_status("test", erlcloud_aws:default_config())), Tests).
 
 %% UpdateTrail test based on the API examples:
 %% http://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_UpdateTrail.html
 update_trail_input_tests(_) ->
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"UpdateTrail example request",
              ?_f(erlcloud_cloudtrail:update_trail("test", "test_bucket", "test_prefix", "test_topic", true, erlcloud_aws:default_config())), "
@@ -409,10 +409,10 @@ update_trail_output_tests(_) ->
                     \"SnsTopicName\": \"test_topic\",
                     \"IncludeGlobalServiceEvents\": \"true\"
                 }">>,
-    Tests = 
+    Tests =
         [?_cloudtrail_test(
             {"UpdateTrail example response", Response,
-                {ok, jsx:decode(Response)}})
+                {ok, jsx:decode(Response, [{return_maps, false}])}})
         ],
     output_tests(?_f(erlcloud_cloudtrail:update_trail("test", "test_bucket", "test_prefix", "test_topic", true, erlcloud_aws:default_config())), Tests).
 

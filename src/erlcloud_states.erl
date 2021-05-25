@@ -651,7 +651,7 @@ request(Config, Request) ->
         {ok, {_, <<"{}">>}} ->
             ok;
         {ok, {_, RespBody}} ->
-            {ok, jsx:decode(RespBody, [return_maps])};
+            {ok, jsx:decode(RespBody)};
         {error, _} = Error ->
             Error
     end.

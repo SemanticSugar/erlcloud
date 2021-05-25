@@ -52,14 +52,14 @@ configure(AccessKeyID, SecretAccessKey, Host) ->
 %%
 -spec create_trail(string(), string(), aws_config()) -> ct_return().
 create_trail(Trail, S3BucketName, Config) ->
-    Json = [{<<"Name">>, list_to_binary(Trail)}, 
+    Json = [{<<"Name">>, list_to_binary(Trail)},
             {<<"S3BucketName">>, list_to_binary(S3BucketName)}
            ],
     ct_request("CreateTrail", Json, Config).
 
 -spec create_trail(string(), string(), string(), aws_config()) -> ct_return().
 create_trail(Trail, S3BucketName, SnsTopicName,  Config) ->
-    Json = [{<<"Name">>, list_to_binary(Trail)}, 
+    Json = [{<<"Name">>, list_to_binary(Trail)},
             {<<"S3BucketName">>, list_to_binary(S3BucketName)},
             {<<"SnsTopicName">>, list_to_binary(SnsTopicName)}
            ],
@@ -67,7 +67,7 @@ create_trail(Trail, S3BucketName, SnsTopicName,  Config) ->
 
 -spec create_trail(string(), string(), string(), boolean(), aws_config()) -> ct_return().
 create_trail(Trail, S3BucketName, SnsTopicName, IncludeGlobalServiceEvents, Config) ->
-    Json = [{<<"Name">>, list_to_binary(Trail)}, 
+    Json = [{<<"Name">>, list_to_binary(Trail)},
             {<<"S3BucketName">>, list_to_binary(S3BucketName)},
             {<<"SnsTopicName">>, list_to_binary(SnsTopicName)},
             {<<"IncludeGlobalServiceEvents">>, list_to_binary(atom_to_list(IncludeGlobalServiceEvents))}
@@ -76,7 +76,7 @@ create_trail(Trail, S3BucketName, SnsTopicName, IncludeGlobalServiceEvents, Conf
 
 -spec create_trail(string(), string(), string(), string(), boolean(), aws_config()) -> ct_return().
 create_trail(Trail, S3BucketName, S3KeyPrefix, SnsTopicName, IncludeGlobalServiceEvents, Config) ->
-    Json = [{<<"Name">>, list_to_binary(Trail)}, 
+    Json = [{<<"Name">>, list_to_binary(Trail)},
             {<<"S3BucketName">>, list_to_binary(S3BucketName)},
             {<<"S3KeyPrefix">>, list_to_binary(S3KeyPrefix)},
             {<<"SnsTopicName">>, list_to_binary(SnsTopicName)},
@@ -156,7 +156,7 @@ stop_logging(Trail, Config) ->
 
 -spec update_trail(string(), string(), string(), aws_config()) -> ct_return().
 update_trail(Trail, S3BucketName, SnsTopicName, Config) ->
-    Json = [{<<"Name">>, list_to_binary(Trail)}, 
+    Json = [{<<"Name">>, list_to_binary(Trail)},
             {<<"S3BucketName">>, list_to_binary(S3BucketName)},
             {<<"SnsTopicName">>, list_to_binary(SnsTopicName)}
            ],
@@ -164,7 +164,7 @@ update_trail(Trail, S3BucketName, SnsTopicName, Config) ->
 
 -spec update_trail(string(), string(), string(), boolean(), aws_config()) -> ct_return().
 update_trail(Trail, S3BucketName, SnsTopicName, IncludeGlobalServiceEvents, Config) ->
-    Json = [{<<"Name">>, list_to_binary(Trail)}, 
+    Json = [{<<"Name">>, list_to_binary(Trail)},
             {<<"S3BucketName">>, list_to_binary(S3BucketName)},
             {<<"SnsTopicName">>, list_to_binary(SnsTopicName)},
             {<<"IncludeGlobalServiceEvents">>, list_to_binary(atom_to_list(IncludeGlobalServiceEvents))}
@@ -174,7 +174,7 @@ update_trail(Trail, S3BucketName, SnsTopicName, IncludeGlobalServiceEvents, Conf
 
 -spec update_trail(string(), string(), string(), string(), boolean(), aws_config()) -> ct_return().
 update_trail(Trail, S3BucketName, S3KeyPrefix, SnsTopicName, IncludeGlobalServiceEvents, Config) ->
-    Json = [{<<"Name">>, list_to_binary(Trail)}, 
+    Json = [{<<"Name">>, list_to_binary(Trail)},
             {<<"S3BucketName">>, list_to_binary(S3BucketName)},
             {<<"S3KeyPrefix">>, list_to_binary(S3KeyPrefix)},
             {<<"SnsTopicName">>, list_to_binary(SnsTopicName)},
@@ -184,28 +184,28 @@ update_trail(Trail, S3BucketName, S3KeyPrefix, SnsTopicName, IncludeGlobalServic
 
 % Json parameter must be a list of binary key/value tuples.
 ct_request(Operation, [], Config) ->
-    #aws_config{cloudtrail_scheme = Scheme, 
+    #aws_config{cloudtrail_scheme = Scheme,
                 cloudtrail_host = Host} = Config,
     request_impl(post, Scheme, Host, port_spec(Config), "/", Operation, [], "{}", Config);
 
 ct_request(Operation, Body, Config) ->
-    #aws_config{cloudtrail_scheme = Scheme, 
+    #aws_config{cloudtrail_scheme = Scheme,
                 cloudtrail_host = Host} = Config,
     request_impl(post, Scheme, Host, port_spec(Config), "/", Operation, [], jsx:encode(Body), Config).
- 
+
 request_impl(Method, Scheme, Host, Port, Path, Operation, Params, Body, #aws_config{} = Config) ->
     %% TODO: Make api prefix a part of aws_config
     Api_Operation = lists:flatten(?CLOUD_TRAIL_API_PREFIX, Operation),
     Headers = headers(Config, Api_Operation, Params, Body, ?SERVICE_NAME),
-    
+
     case erlcloud_aws:aws_request_form_raw(
-        Method, Scheme, Host, Port, Path, Body, 
-        [{"content-type", "application/x-amz-json-1.1"} | Headers], 
+        Method, Scheme, Host, Port, Path, Body,
+        [{"content-type", "application/x-amz-json-1.1"} | Headers],
         Config) of
        {ok, RespBody} ->
             case Config#aws_config.cloudtrail_raw_result of
                 true -> {ok, RespBody};
-                _ -> {ok, jsx:decode(RespBody)}
+                _ -> {ok, jsx:decode(RespBody, [{return_maps, false}])}
             end;
         {error, Reason} ->
             {error, Reason}

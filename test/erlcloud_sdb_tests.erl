@@ -1,7 +1,22 @@
 -module(erlcloud_sdb_tests).
 
 -ifdef(TEST).
--compile(export_all).
+
+-export([
+    expect_chain/1,
+    single_result_response/0,
+    single_result_response/1,
+    only_token_response/0,
+    single_result_and_token_response/0,
+    unavailable_response/0,
+    select_single_response/0,
+    select_next_token/0,
+    select_all_single_response/0,
+    select_all_failure/0,
+    select_all_503/0,
+    select_all_next_token/0,
+    select_all_next_and_failure/0,
+    select_all_two_results/0]).
 
 -include_lib("eunit/include/eunit.hrl").
 

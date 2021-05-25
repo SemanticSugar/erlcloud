@@ -5,7 +5,6 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 -include("erlcloud_iam.hrl").
--include_lib("xmerl/include/xmerl.hrl").
 
 %% Library initialization.
 -export([configure/2, configure/3, new/2, new/3, iam_query/5]).
@@ -1054,8 +1053,15 @@ data_fun("Integer") -> {erlcloud_xml, get_integer};
 data_fun("Boolean") -> {erlcloud_xml, get_bool};
 data_fun("Uri") -> {?MODULE, get_uri}.
 
+-ifdef(ERLANG_OTP_VERSION_22).
 get_uri(Key, Item) ->
     http_uri:decode(erlcloud_xml:get_text(Key, Item)).
+-else.
+get_uri(Key, Item) ->
+    uri_string:percent_decode(
+        uri_string:normalize(
+            erlcloud_xml:get_text(Key, Item))).
+-endif.
 
 make_list_virtual_mfa_devices_params(undefined, undefined, undefined) ->
     [];
