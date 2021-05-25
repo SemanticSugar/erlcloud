@@ -20,7 +20,8 @@
                   ]},
   {modules, []},
   {env, []},
+  {pkg_name, nextroll_erlcloud},
   {licenses, ["MIT"]},
-  {links, [{"Github", "https://github.com/erlcloud/erlcloud"}]}
+  {links, [{"Github", "https://github.com/AdRoll/erlcloud"}]}
  ]
 }.
